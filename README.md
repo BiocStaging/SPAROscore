@@ -1,2 +1,2 @@
-# uniscore
-Unified gene set scoring, adaptive to sparsity regiments from HD spatial to bulk
+# SPAROScore
+**Sp**arsity **A**ware **Ro**bust Gene Set Scoring Algorithm
