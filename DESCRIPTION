@@ -1,0 +1,16 @@
+Package: SPAROscore
+Type: Package
+Title: A package to compute gene signature scores from transcriptomics data
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Venkatesh", "Kamaraj",
+      email = "venkatesh.kamaraj@adelaide.edu.au",
+      role = c("aut", "cre")
+    )
+  )
+Description: SPAROscore stands for SParsity Aware RObust gene signature score.
+    SPAROscore can effectively obtain gene signature scores from transcriptomics
+    datasets of any sparsity levels including bulk, single-cell and spatial. 
+License: What license is it under?
+Encoding: UTF-8
