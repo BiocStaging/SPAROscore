@@ -12,6 +12,10 @@ Authors@R: c(
 Description: SPAROscore stands for SParsity Aware RObust gene signature score.
     SPAROscore can effectively obtain gene signature scores from transcriptomics
     datasets of any sparsity levels including bulk, single-cell and spatial. 
-License: What license is it under?
+License: GPL-3.0
 Encoding: UTF-8
 RoxygenNote: 7.3.3
+Imports: 
+    DelayedMatrixStats,
+    MatrixGenerics,
+    sparseMatrixStats
