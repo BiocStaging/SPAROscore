@@ -2,9 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{validate_signature}
 \alias{validate_signature}
-\title{validate_signature() is a function to identify and report the genes from the
-user defined signature gene set for which pre-calculated are ranks available
-and can be used in signature scoring}
+\title{Identify valid and missing signature genes}
 \usage{
 validate_signature(signature, all_genes)
 }
@@ -27,5 +25,5 @@ and can be used in signature scoring
 \examples{
 validate_signature(c("CCR7", "CD62L"), c("CCR7", "CD27",  "CD28"))
 
-validate_signature(gene_signature, rownames(sparo_ranks))
+validate_signature(gene_signature, rownames(sparoranks))
 }

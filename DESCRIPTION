@@ -16,6 +16,9 @@ License: GPL-3.0
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Imports: 
+    DelayedArray,
     DelayedMatrixStats,
+    Matrix,
     MatrixGenerics,
+    matrixStats,
     sparseMatrixStats
