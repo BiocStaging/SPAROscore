@@ -2,15 +2,14 @@
 % Please edit documentation in R/helper_functions.R
 \name{impute_missing_gene_ranks}
 \alias{impute_missing_gene_ranks}
-\title{impute_missing_gene_ranks() is a function to impute the ranks of
-missing genes with the rank_cap.}
+\title{Impute missing genes ranks with cap values}
 \usage{
-impute_missing_gene_ranks(incomplete_ranks, r_cap, missing_genes)
+impute_missing_gene_ranks(incomplete_ranks, rank_cap, missing_genes)
 }
 \arguments{
 \item{incomplete_ranks}{A numeric vector of the gene ranks  in a cell/sample}
 
-\item{r_cap}{A numeric value of the rank_cap for the particular cell/sample}
+\item{rank_cap}{A numeric value of the rank_cap for the particular cell/spot}
 
 \item{missing_genes}{A character vector of the missing genes for which ranks
 should be imputed}

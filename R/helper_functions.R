@@ -1,3 +1,5 @@
+#' Identify valid and missing signature genes
+#'
 #' validate_signature() is a function to identify and report the genes from the
 #' user defined signature gene set for which pre-calculated are ranks available
 #' and can be used in signature scoring
@@ -15,7 +17,7 @@
 #' @examples
 #' validate_signature(c("CCR7", "CD62L"), c("CCR7", "CD27",  "CD28"))
 #'
-#' validate_signature(gene_signature, rownames(sparo_ranks))
+#' validate_signature(gene_signature, rownames(sparoranks))
 validate_signature <- function(signature, all_genes){
 
     valid_signature <- signature[signature %in% all_genes]
@@ -38,6 +40,8 @@ validate_signature <- function(signature, all_genes){
 
 
 
+#' Impute missing genes ranks with cap values
+#'
 #' impute_missing_gene_ranks() is a function to impute the ranks of
 #' missing genes with the rank_cap.
 #'
@@ -64,61 +68,107 @@ impute_missing_gene_ranks <- function(incomplete_ranks,rank_cap, missing_genes){
 }
 
 
+#' Append numeric vector to matrix like objects. Geeneralised rbind()
+#'
+#' append_to_matrix_like_object() function converts a numeric vector to
+#' matrix, or sparseMatrix, or DelayedArrays and then appends it to
+#' the respective matrix object. This way, original matrix type is conserved.
+#'
+#'
+#' @param matrix_like_object a matrix, or sparseMatrix, or DelayedArrays
+#' @param numeric_vector numeric vector
+#'
+#' @returns A matrix-like object with an additional row
+#'
+#' @examples
+#' append_to_matrix_like_object(counts_data, cap_values)
+#'
+append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
+    if(ncol(matrix_like_object) != length(numeric_vector)){
+        stop("Cannot append cap values. Length not equal to columns")
+    }
+
+    if(inherits(matrix_like_object, "DelayedMatrix")){
+        #convert numeric vector to delayedmatrix
+        delayed_vector <- DelayedArray::DelayedArray(
+            matrix(numeric_vector, nrow = 1))
+        return(DelayedArray::rbind(matrix_like_object, delayed_vector))
+    }
+    else if(inherits(matrix_like_object, "sparseMatrix")){
+        #convert numeric vector to sparsematrix
+        sparse_vector <- Matrix::Matrix(numeric_vector, nrow = 1, sparse = TRUE)
+        return(rbind(matrix_like_object, sparse_vector))
+    }
+    else if(is.matrix(matrix_like_object)){
+        return(rbind(matrix_like_object, numeric_vector))
+    }
+    else{
+        stop("Unsupported file type for counts/caps")
+    }
+}
 
 
-
-#' get_counts_to_ranks() is a function that take counts matrix data as input
-#' and returns column wise ascending ranks matrix. Uses matrixStats::colRanks()
+#' Compute column-wise ranks with the respective rank caps
+#'
+#' get_sparoranks_from_counts() takes counts matrix data as input
+#' and returns column wise ascending ranks matrix.
+#' Uses MatrixGenerics::colRanks()
 #' Ties are handles by minimum by default
 #'
 #' @param counts_data A matrixilike object of counts where
 #' columns are spots/cells/samples and rows are genes.
 #' Can handle matrix, sparsematrix, delayedmatrix
 #'
-#' @param ties.method A character string specifying how ties are treated.
+#' @param handle_ties A character string specifying how ties are treated.
 #' "min" by default. Can be "min", "max", "average", or "random".
 #'
 #' @param rank_cap_metric A character string specifying the type of rank cap.
 #' Default: "geometric_average" cap is the geometric average of (1 + count)
-#' "arithmetic_average" cap is the arithmetic average of counts
-#' "manual_override" cap is a user mention constant expression value.
+#' "manual_override" cap is user mentioned constant expression values.
 #' "manual_override" requires manual_expr_caps to be NOT NULL
 #'
 #' @param manual_expr_caps used only if rank_cap_metric = "manual_override"
 #' A numeric vector of length equals total columns in count_data
 #'
 #' @returns A matrix of type integer. Has one additional row with the rank caps
-#' If ties.method = "average" then it is a matrix of type numeric.
+#' If handle_ties = "average" then it is a matrix of type numeric.
 #'
 #' @examples
-#' get_counts_to_ranks
-get_counts_to_ranks <- function(counts_data,
-                                ties.method = "min",
+#' get_sparoranks_from_counts(counts_data,
+#' handle_ties = "min", rank_cap_metric = "geometric_average")
+get_sparoranks_from_counts <- function(counts_data,
+                                handle_ties = "min",
                                 rank_cap_metric = "geometric_average",
                                 manual_expr_caps = NULL){
 
 
     # check validity of input
     if(!(rank_cap_metric %in%
-         c("geometric_average", "arithmetic_average", "manual_override"))){
+         c("geometric_average", "manual_override"))){
         stop("Invalid value provided for rank_cap_metric
-             Limit to using 'geometric_average',
-             'arithmetic_average', or 'manual_override'")
+             Limit to using 'geometric_average' or 'manual_override'")
+    }
+
+    # check validity of input
+    if(!(handle_ties %in%
+         c("min", "max", "average", "random"))){
+        stop("Invalid value provided for handle_ties
+             Limit to using 'min', 'max', 'average' or 'random'")
     }
 
     # Compute rank caps' expression values as per user input
     if(rank_cap_metric == "geometric_average"){
         # Geometric mean of (1 + count) of each cell as the expression cap
-        expression_caps <- apply(counts_data, 2,
+        cap_values <- apply(counts_data, 2,
                                  function(x){exp(mean(log(1+ x),
                                                       na.rm = TRUE))})
     }
 
-    else if(rank_cap_metric == "arithmetic_average"){
-        # Arithmetic mean of (count) of each cell as the expression cap
-        expression_caps <- apply(counts_data, 2,
-                                 function(x){mean(x, na.rm = TRUE)})
-    }
+    # else if(rank_cap_metric == "arithmetic_average"){
+    #     # Arithmetic mean of (count) of each cell as the expression cap
+    #     cap_values <- apply(counts_data, 2,
+    #                              function(x){mean(x, na.rm = TRUE)})
+    # }
 
     else if(rank_cap_metric == "manual_override"){
         # A user defined expression value as the cap
@@ -131,19 +181,21 @@ get_counts_to_ranks <- function(counts_data,
                  columns in the expression matrix")
         }
         if(length(manual_expr_caps) == ncol(counts_data)){
-            expression_caps <- manual_expr_caps
+            cap_values <- manual_expr_caps
         }
 
     }
 
 
+
     # append expression caps as the last row to count_data  before ranking
-    counts_data <- rbind(counts_data, expression_caps)
+    counts_data <- append_to_matrix_like_object(counts_data, cap_values)
 
     # Rank each column of gene expressions along with the expression caps
     rank_data <- MatrixGenerics::colRanks(-counts_data,
-                                          ties.method = ties.method,
-                                          preserveShape = TRUE)
+                                          ties.method = handle_ties,
+                                          preserveShape = TRUE,
+                                          useNames =  FALSE)
 
     # port column names and rownames from count_data to rank_data
     rownames(rank_data) <- rownames(counts_data)
@@ -157,6 +209,8 @@ get_counts_to_ranks <- function(counts_data,
 
 
 
+#' Compute SPAROscore for a single sample/cell/spot for a single signature
+#'
 #' compute_sparoscore() is a function to compute SPAROscore for a single column
 #' based on the gene rankings of signature genes and rank cap
 #' SPAROscore is Spearman Footrule Distance metric of signature ranks
@@ -179,6 +233,27 @@ get_counts_to_ranks <- function(counts_data,
 #' @returns A numeric of sparoscore for the particular sample/cell/spot
 #'
 #' @examples
+#' # validate gene signatures
+#' num_genes <- nrow(counts_data)
+#' valid_gene_signature <- validate_signature(signature_genes,
+#' rownames(counts_data))
+#'
+#' valid_genes <- valid_gene_signature$valid_genes
+#' missing_genes <- valid_gene_signature$missing_genes
+#'
+#' # get sparoroanks
+#' sparoranks <- get_sparoranks_from_counts(counts_data)
+#'
+#'
+#'
+#' compute_sparoscore(
+#' signature_ranks_vector = sparoranks[signature_genes, cell_id][1:num_genes],
+#' rank_cap = sparoranks[signature_genes, cell_id][num_genes + 1],
+#' handle_missing_genes = "skip",
+#' missing_geneset = missing_genes)
+#'
+#'
+#'
 compute_sparoscore <- function(signature_ranks_vector, rank_cap,
                                handle_missing_genes = "skip", missing_geneset){
 
@@ -215,7 +290,7 @@ compute_sparoscore <- function(signature_ranks_vector, rank_cap,
 
 
     # Calculate normalised spearman footrule distance
-    sparo_score <- spearman_footrule/max_spearman_footrule
+    final_sparoscore <- spearman_footrule/max_spearman_footrule
 
-    return(sparo_score)
+    return(final_sparoscore)
 }
