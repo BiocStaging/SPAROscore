@@ -8,25 +8,16 @@
 #'
 #' @param counts_data A matrix-like object of counts where
 #' columns are spots/cells/samples and rows are genes.
-#' Can natively handle matrix, data.frame, sparsematrix, delayedmatrix.
-#' Hence, can handle count assays from Seurat objects,
-#' SummarisedExperiment, SingleCellExperiment objects, SpatialExperiment objects
-#' and many mare.
+#' Can handle matrix, sparsematrix, delayedmatrix
+#'
+#'
+#' @param count_caps A optional numeric vector comprising the expresison values
+#' for each column to be used as capping value. By default the geometric average
+#' counts of each column will be used as count_caps
 #'
 #'
 #' @param handle_ties A character string specifying how ties are treated.
-#' "min" by default. Can be "min", "max", "average", or "random"
-#'
-#'
-#' @param rank_cap_metric A character string specifying the type of rank cap.
-#' Default: "geometric_average" cap is the geometric average of (1 + count)
-#' "manual_override" cap is user mentioned constant expression values.
-#' "manual_override" requires manual_expr_caps to be NOT NULL
-#'
-#'
-#' @param manual_expr_caps used only if rank_cap_metric = "manual_override"
-#' A numeric vector of length equals total columns in count_data. Contains rank
-#' caps for each sample/cell/spot individually
+#' "min" by default. Can be "min", "max", "average", or "random".
 #'
 #'
 #' @returns A matrix of type integer. Has one additional row with the rank caps
@@ -38,32 +29,29 @@
 #' @examples
 #'
 #' # For counts data in the form of matrix, sparsematrix or delayedmatrix
-#' sparoranks <- get_sparoranks(counts_data,
-#' handle_ties = "min", rank_cap_metric = "geometric_average")
+#' sparoranks <- get_sparoranks(counts_data)
 #'
 
 # set the generic for get_sparoranks() methods
 setGeneric("get_sparoranks",
            function(counts_data,
-                    handle_ties = "min",
-                    rank_cap_metric = "geometric_average",
-                    manual_expr_caps = NULL)
+                    count_caps = compute_geometric_average(counts_data),
+                    handle_ties = "min")
                standardGeneric("get_sparoranks"))
 
 
 # set the method for get_sparoranks() where counts is a matrix
 setMethod("get_sparoranks",
-          signature('matrix','ANY', 'ANY', 'ANY'),
+          signature('matrix','ANY', 'ANY'),
           function(counts_data,
-                   handle_ties = "min",
-                   rank_cap_metric = "geometric_average",
-                   manual_expr_caps = NULL){
+                   count_caps = compute_geometric_average(counts_data),
+                   handle_ties = "min"){
 
               #call the helper function
-              sparoranks <- get_sparoranks_from_counts(counts_data,
-                            handle_ties = "min",
-                            rank_cap_metric = "geometric_average",
-                            manual_expr_caps = NULL)
+              sparoranks <- get_sparoranks_from_counts(
+                  counts_data,
+                  count_caps = compute_geometric_average(counts_data),
+                  handle_ties = "min")
               return(sparoranks)
           }
 )
@@ -71,17 +59,16 @@ setMethod("get_sparoranks",
 
 # set the method for get_sparoranks() where counts is a sparseMatrix
 setMethod("get_sparoranks",
-          signature('sparseMatrix','ANY', 'ANY', 'ANY'),
+          signature('sparseMatrix','ANY', 'ANY'),
           function(counts_data,
-                   handle_ties = "min",
-                   rank_cap_metric = "geometric_average",
-                   manual_expr_caps = NULL){
+                   count_caps = compute_geometric_average(counts_data),
+                   handle_ties = "min"){
 
               #call the helper function
-              sparoranks <- get_sparoranks_from_counts(counts_data,
-                            handle_ties = "min",
-                            rank_cap_metric = "geometric_average",
-                            manual_expr_caps = NULL)
+              sparoranks <- get_sparoranks_from_counts(
+                  counts_data,
+                  count_caps = compute_geometric_average(counts_data),
+                  handle_ties = "min")
               return(sparoranks)
           }
 )
@@ -89,17 +76,16 @@ setMethod("get_sparoranks",
 
 # set the method for get_sparoranks() where counts is a DelayedMatrix
 setMethod("get_sparoranks",
-          signature('DelayedMatrix','ANY', 'ANY', 'ANY'),
+          signature('DelayedMatrix','ANY', 'ANY'),
           function(counts_data,
-                   handle_ties = "min",
-                   rank_cap_metric = "geometric_average",
-                   manual_expr_caps = NULL){
+                   count_caps = compute_geometric_average(counts_data),
+                   handle_ties = "min"){
 
               #call the helper function
-              sparoranks <- get_sparoranks_from_counts(counts_data,
-                            handle_ties = "min",
-                            rank_cap_metric = "geometric_average",
-                            manual_expr_caps = NULL)
+              sparoranks <- get_sparoranks_from_counts(
+                  counts_data,
+                  count_caps = compute_geometric_average(counts_data),
+                  handle_ties = "min")
               return(sparoranks)
           }
 )
@@ -107,17 +93,16 @@ setMethod("get_sparoranks",
 
 # set the method for get_sparoranks() where counts is a data.frame
 setMethod("get_sparoranks",
-          signature('data.frame','ANY', 'ANY', 'ANY'),
+          signature('data.frame','ANY', 'ANY'),
           function(counts_data,
-                   handle_ties = "min",
-                   rank_cap_metric = "geometric_average",
-                   manual_expr_caps = NULL){
+                   count_caps = compute_geometric_average(counts_data),
+                   handle_ties = "min"){
 
               #call the helper function
-              sparoranks <- get_sparoranks_from_counts(as.matrix(counts_data),
-                            handle_ties = "min",
-                            rank_cap_metric = "geometric_average",
-                            manual_expr_caps = NULL)
+              sparoranks <- get_sparoranks_from_counts(
+                  as.matrix(counts_data),
+                  count_caps = compute_geometric_average(counts_data),
+                  handle_ties = "min")
               return(sparoranks)
           }
 )

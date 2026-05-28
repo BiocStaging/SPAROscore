@@ -31,7 +31,8 @@ validate_signature <- function(signature, all_genes){
     }
 
     if(length(valid_signature) == 0){
-        stop("No signature genes are present in the input dataset")
+        stop("SPAROscore says:
+             No signature genes are present in the input dataset")
     }
 
     return(list(valid_genes = valid_signature, missing_genes = invalid_genes))
@@ -85,7 +86,8 @@ impute_missing_gene_ranks <- function(incomplete_ranks,rank_cap, missing_genes){
 #'
 append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
     if(ncol(matrix_like_object) != length(numeric_vector)){
-        stop("Cannot append cap values. Length not equal to columns")
+        stop("SPAROscore says:
+             Cannot append cap values. Length not equal to columns")
     }
 
     if(inherits(matrix_like_object, "DelayedMatrix")){
@@ -103,8 +105,31 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
         return(rbind(matrix_like_object, numeric_vector))
     }
     else{
-        stop("Unsupported file type for counts/caps")
+        stop("SPAROscore says: Unsupported file type for counts/caps")
     }
+}
+
+
+#' Compute geometric average of counts
+#'
+#'compute_geometric_average() computes geomwtric average expression for
+#' each sample/cell/spot to be used to find rank caps
+#'
+#' @param counts_data A matrixilike object of counts where
+#' columns are spots/cells/samples and rows are genes.
+#' Can handle matrix, sparsematrix, delayedmatrix
+#'
+#' @returns A numeric vector of column-wise geometric averages
+#'
+#' @examples
+#' compute_geometric_average(counts_data)
+#'
+#'
+compute_geometric_average <-function(counts_data){
+    cap_values <- apply(counts_data, 2,
+                        function(x){exp(mean(log(1+ x),
+                                             na.rm = TRUE))})
+    return(cap_values)
 }
 
 
@@ -115,76 +140,50 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #' Uses MatrixGenerics::colRanks()
 #' Ties are handles by minimum by default
 #'
-#' @param counts_data A matrixilike object of counts where
+#' @param counts_data A matrix-like object of counts where
 #' columns are spots/cells/samples and rows are genes.
 #' Can handle matrix, sparsematrix, delayedmatrix
+#'
+#'
+#' @param count_caps A optional numeric vector comprising the expresison values
+#' for each column to be used as capping value. By default the geometric average
+#' counts of each column will be used as count_caps
+#'
 #'
 #' @param handle_ties A character string specifying how ties are treated.
 #' "min" by default. Can be "min", "max", "average", or "random".
 #'
-#' @param rank_cap_metric A character string specifying the type of rank cap.
-#' Default: "geometric_average" cap is the geometric average of (1 + count)
-#' "manual_override" cap is user mentioned constant expression values.
-#' "manual_override" requires manual_expr_caps to be NOT NULL
-#'
-#' @param manual_expr_caps used only if rank_cap_metric = "manual_override"
-#' A numeric vector of length equals total columns in count_data
 #'
 #' @returns A matrix of type integer. Has one additional row with the rank caps
 #' If handle_ties = "average" then it is a matrix of type numeric.
+#'
 #'
 #' @examples
 #' get_sparoranks_from_counts(counts_data,
 #' handle_ties = "min", rank_cap_metric = "geometric_average")
 get_sparoranks_from_counts <- function(counts_data,
-                                handle_ties = "min",
-                                rank_cap_metric = "geometric_average",
-                                manual_expr_caps = NULL){
+                                count_caps =
+                                    compute_geometric_average(counts_data),
+                                handle_ties = "min"){
 
 
-    # check validity of input
-    if(!(rank_cap_metric %in%
-         c("geometric_average", "manual_override"))){
-        stop("Invalid value provided for rank_cap_metric
-             Limit to using 'geometric_average' or 'manual_override'")
-    }
 
     # check validity of input
     if(!(handle_ties %in%
          c("min", "max", "average", "random"))){
-        stop("Invalid value provided for handle_ties
+        stop("SPAROscore says: Invalid value provided for handle_ties
              Limit to using 'min', 'max', 'average' or 'random'")
     }
 
-    # Compute rank caps' expression values as per user input
-    if(rank_cap_metric == "geometric_average"){
-        # Geometric mean of (1 + count) of each cell as the expression cap
-        cap_values <- apply(counts_data, 2,
-                                 function(x){exp(mean(log(1+ x),
-                                                      na.rm = TRUE))})
+    # Compute rank caps' expression values or use user input
+    if(length(count_caps) == ncol(counts_data)){
+        cap_values <- count_caps
+    }
+    else{
+        stop("SPAROscore says: Length of user entered count_caps are
+        not matching the column count od counts_data")
     }
 
-    # else if(rank_cap_metric == "arithmetic_average"){
-    #     # Arithmetic mean of (count) of each cell as the expression cap
-    #     cap_values <- apply(counts_data, 2,
-    #                              function(x){mean(x, na.rm = TRUE)})
-    # }
-
-    else if(rank_cap_metric == "manual_override"){
-        # A user defined expression value as the cap
-        if(is.null(manual_expr_caps)){
-            stop("manual_expr_caps missing.
-                 It is required as rank_cap_metric is set to manual_override")
-        }
-        if(length(manual_expr_caps) != ncol(counts_data)){
-            stop("User provided manual expression caps do not match the total
-                 columns in the expression matrix")
-        }
-        if(length(manual_expr_caps) == ncol(counts_data)){
-            cap_values <- manual_expr_caps
-        }
-
-    }
 
 
     # get original rownames and column names fo count_data
@@ -197,28 +196,31 @@ get_sparoranks_from_counts <- function(counts_data,
 
     # print message to user as to what object is being used
     if(inherits(counts_data, "DelayedMatrix")){
-        message("Ranking a DelayedMatrix object")
+        message("SPAROscore says: Ranking a DelayedMatrix object")
     }
     else if(inherits(counts_data, "sparseMatrix")){
-        message("Ranking a sparseMatrix object")
+        message("SPAROscore says: Ranking a sparseMatrix object")
     }
     else if(is.matrix(counts_data)){
-        message("Ranking a matrix object")
+        message("SPAROscore says: Ranking a matrix object")
     }
 
 
 
     # Rank each column of gene expressions along with the expression caps
-    rank_data <- MatrixGenerics::colRanks(-counts_data,
+    full_rank_data <- MatrixGenerics::colRanks(-counts_data,
                                           ties.method = handle_ties,
                                           preserveShape = TRUE,
                                           useNames =  FALSE)
 
-    # port column names and rownames from count_data to rank_data
-    dimnames(rank_data)[[1]] <- c(count_data_rnames, "rank_caps")
-    dimnames(rank_data)[[2]] <- count_data_cnames
+    # port column names and rownames from count_data to full_rank_data
+    dimnames(full_rank_data)[[1]] <- c(count_data_rnames, "rank_caps")
+    dimnames(full_rank_data)[[2]] <- count_data_cnames
 
-    return(rank_data)
+    # separate the ranks and rank caps and return
+
+    return(list(sparoranks = full_rank_data[count_data_rnames, ],
+                rank_caps = full_rank_data["rank_caps", ]))
 }
 
 
@@ -277,7 +279,7 @@ compute_sparoscore <- function(signature_ranks_vector, rank_cap,
 
     # check validity of input
     if(!(handle_missing_genes %in% c("skip", "impute"))){
-        stop("Invalid value provided for handle_missing_genes.
+        stop("SPAROscore says: Invalid value provided for handle_missing_genes.
              Limit to using 'skip' or 'impute'")
     }
 
