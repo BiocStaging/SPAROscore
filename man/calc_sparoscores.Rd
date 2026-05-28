@@ -6,13 +6,15 @@
 \usage{
 calc_sparoscores(
   sparoranks,
+  rank_caps,
   signature_genes,
-  handle_missing_genes = "skip",
-  rank_cap_override = NULL
+  handle_missing_genes = "skip"
 )
 }
 \arguments{
 \item{sparoranks}{matrix outputted by get_sparoranks()}
+
+\item{rank_caps}{numeric vector containing column-wise rank caps to be used}
 
 \item{signature_genes}{character vector of gene names/ids. Note that the
 naming scheme should match the original input data.
@@ -22,14 +24,9 @@ naming scheme should match the original input data.
 missing in the imput dataset are handled.
 Defaults to "skip", removing those genes from the analyses
 "impute" adds zero expression values to all these genes in the input dataset}
-
-\item{rank_cap_override}{default NULL, uses geometric average rank caps
-When not NULL, should be a numeric vector of length ncol(sparoranks)}
 }
 \value{
-A matrix with ncol = 2 and rows = ncol(sparoranks) .
-First column contains the rank caps for each sample/cell/spot
-Second column contain the scores for each sample/cell/spot
+A numeric with the scores for each sample/cell/spot
 }
 \description{
 calc_sparoscores() computes signature score for each column of the input data.
@@ -38,8 +35,10 @@ from the rank cap (default to the rank of geometric average expression)
 for every sample/cell/spot
 }
 \examples{
-sparoranks <- get_sparoranks(counts_data)
-sparoscores <- calc_sparoscores(sparoranks, c("geneA", "geneB", "geneC"))
+sparorank_output <- get_sparoranks(counts_data)
+sparoscores <- calc_sparoscores(sparoranks = sparorank_output$sparoranks,
+                                rank_caps = sparorank_output$rank_caps
+                                signature_genes = c("geneA", "geneC"))
 
 
 }

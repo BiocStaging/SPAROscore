@@ -6,26 +6,21 @@
 \usage{
 get_sparoranks_from_counts(
   counts_data,
-  handle_ties = "min",
-  rank_cap_metric = "geometric_average",
-  manual_expr_caps = NULL
+  count_caps = compute_geometric_average(counts_data),
+  handle_ties = "min"
 )
 }
 \arguments{
-\item{counts_data}{A matrixilike object of counts where
+\item{counts_data}{A matrix-like object of counts where
 columns are spots/cells/samples and rows are genes.
 Can handle matrix, sparsematrix, delayedmatrix}
 
+\item{count_caps}{A optional numeric vector comprising the expresison values
+for each column to be used as capping value. By default the geometric average
+counts of each column will be used as count_caps}
+
 \item{handle_ties}{A character string specifying how ties are treated.
 "min" by default. Can be "min", "max", "average", or "random".}
-
-\item{rank_cap_metric}{A character string specifying the type of rank cap.
-Default: "geometric_average" cap is the geometric average of (1 + count)
-"manual_override" cap is user mentioned constant expression values.
-"manual_override" requires manual_expr_caps to be NOT NULL}
-
-\item{manual_expr_caps}{used only if rank_cap_metric = "manual_override"
-A numeric vector of length equals total columns in count_data}
 }
 \value{
 A matrix of type integer. Has one additional row with the rank caps
