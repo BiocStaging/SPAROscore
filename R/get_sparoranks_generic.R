@@ -1,7 +1,9 @@
+#' Compute ranks for SPAROscore
+#'
 #' get_sparoranks() is a generic function that take counts matrix data as input
 #' and returns column wise ascending ranks matrix.
-#' Uses the S4 generic MatrixGenerics::colRanks(). Can handle wide range of
-#' input formats (see Arguments)
+#' It uses the S4 generic MatrixGenerics::colRanks() and can handle a wide range
+#' of input formats (see Arguments)
 #' Ties are handles by minimum by default
 #'
 #' @param counts_data A matrix-like object of counts where

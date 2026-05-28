@@ -187,9 +187,26 @@ get_sparoranks_from_counts <- function(counts_data,
     }
 
 
+    # get original rownames and column names fo count_data
+    count_data_rnames <- dimnames(counts_data)[[1]]
+    count_data_cnames <- dimnames(counts_data)[[2]]
 
     # append expression caps as the last row to count_data  before ranking
     counts_data <- append_to_matrix_like_object(counts_data, cap_values)
+
+
+    # print message to user as to what object is being used
+    if(inherits(counts_data, "DelayedMatrix")){
+        message("Ranking a DelayedMatrix object")
+    }
+    else if(inherits(counts_data, "sparseMatrix")){
+        message("Ranking a sparseMatrix object")
+    }
+    else if(is.matrix(counts_data)){
+        message("Ranking a matrix object")
+    }
+
+
 
     # Rank each column of gene expressions along with the expression caps
     rank_data <- MatrixGenerics::colRanks(-counts_data,
@@ -198,8 +215,8 @@ get_sparoranks_from_counts <- function(counts_data,
                                           useNames =  FALSE)
 
     # port column names and rownames from count_data to rank_data
-    rownames(rank_data) <- rownames(counts_data)
-    colnames(rank_data) <- colnames(counts_data)
+    dimnames(rank_data)[[1]] <- c(count_data_rnames, "rank_caps")
+    dimnames(rank_data)[[2]] <- count_data_cnames
 
     return(rank_data)
 }
