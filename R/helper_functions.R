@@ -60,10 +60,10 @@ validate_signature <- function(signature, all_genes){
 impute_missing_gene_ranks <- function(incomplete_ranks,rank_cap, missing_genes){
 
     # Create the additional rows of imputed ranks as a separate matrix
-    imputed_ranks <- rep(rank_cap, length(missing_geneset))
+    imputed_ranks <- rep(rank_cap, length(missing_genes))
 
     # Append the imputed matrix to in incomplete gene ranks
-    full_gene_ranks <- c(incomplete_gene_ranks, imputed_ranks)
+    full_gene_ranks <- c(incomplete_ranks, imputed_ranks)
 
     return(full_gene_ranks)
 }
@@ -230,8 +230,8 @@ get_sparoranks_from_counts <- function(counts_data,
 
 #' Compute SPAROscore for a single sample/cell/spot for a single signature
 #'
-#' compute_sparoscore() is a function to compute SPAROscore for a single column
-#' based on the gene rankings of signature genes and rank cap
+#' compute_sparoscore_per_cell() is a function to compute SPAROscore for a
+#' single column based on the gene rankings of signature genes and rank cap
 #' SPAROscore is Spearman Footrule Distance metric of signature ranks
 #' from the rank cap. They are then normalized with the
 #' theoretically maximum possible Spearman Footrule Distance.
@@ -265,7 +265,7 @@ get_sparoranks_from_counts <- function(counts_data,
 #'
 #'
 #'
-#' compute_sparoscore(
+#' compute_sparoscore_per_cell(
 #' signature_ranks_vector = sparoranks[signature_genes, cell_id][1:num_genes],
 #' rank_cap = sparoranks[signature_genes, cell_id][num_genes + 1],
 #' handle_missing_genes = "skip",
@@ -273,7 +273,7 @@ get_sparoranks_from_counts <- function(counts_data,
 #'
 #'
 #'
-compute_sparoscore <- function(signature_ranks_vector, rank_cap,
+compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
                                handle_missing_genes = "skip", missing_geneset){
 
 
@@ -313,3 +313,88 @@ compute_sparoscore <- function(signature_ranks_vector, rank_cap,
 
     return(final_sparoscore)
 }
+
+
+
+#' Compute SPAROscore: sparsity aware robust gene signature scores
+#'
+#'compute_sparoscores() computes signature score for each column of the data.
+#'Scores are based on Spearman Footrule Distance of the signature gene ranks
+#'from the rank cap (default to the rank of geometric average expression)
+#'for every sample/cell/spot
+#'
+#'
+#' @param sparoranks matrix outputted by get_sparoranks()
+#'
+#'
+#' @param rank_caps numeric vector containing column-wise rank caps to be used
+#'
+#'
+#' @param signature_genes character vector of gene names/ids. Note that the
+#' naming scheme should match the original input data.
+#' (i.e) rownames(counts_data)
+#'
+#'
+#' @param handle_missing_genes character string specifying how signature genes
+#' missing in the imput dataset are handled.
+#' Defaults to "skip", removing those genes from the analyses
+#' "impute" adds zero expression values to all these genes in the input dataset
+#'
+#'
+#' @returns A numeric with the scores for each sample/cell/spot
+#'
+#'
+#' @export
+#'
+#' @examples
+#' sparorank_output <- get_sparoranks(counts_data)
+#' sparoscores <- compute_sparoscores(sparoranks = sparorank_output$sparoranks,
+#'                                 rank_caps = sparorank_output$rank_caps
+#'                                 signature_genes = c("geneA", "geneC"))
+#'
+#'
+compute_sparoscores <- function(sparoranks,
+                             rank_caps,
+                             signature_genes,
+                             handle_missing_genes = "skip"){
+
+
+    # Get all available genes names from the sparoranks
+    available_genes <- rownames(sparoranks)
+
+    # validate the signature_genes
+    valid_gene_signature <- validate_signature(signature_genes, available_genes)
+
+    # subset the ranks for only the valid_genes from signature_genes
+    signature_rank_matrix <- sparoranks[valid_gene_signature$valid_genes, ]
+
+    # get the rank cap values
+    if(length(rank_caps) == ncol(sparoranks)){
+        rank_caps <- rank_caps
+    }
+    else{
+        stop("SPAROscore says: Invalid number of ranks provided")
+    }
+
+
+    # Calculate sparoscores for each column
+    sparoscores <- setNames(rep(0.0,
+                                ncol(signature_rank_matrix)),
+                            colnames(signature_rank_matrix))
+
+
+    sparoscores <- vapply(
+        X = names(sparoscores),
+        FUN = function(cell) {
+            compute_sparoscore_per_cell(
+                signature_ranks_vector = signature_rank_matrix[, cell],
+                rank_cap = rank_caps[cell],
+                handle_missing_genes = handle_missing_genes,
+                missing_geneset = valid_gene_signature$missing_genes
+            )
+        },
+        FUN.VALUE = numeric(1)
+    )
+    return(sparoscores)
+}
+
