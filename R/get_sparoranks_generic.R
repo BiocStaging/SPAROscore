@@ -23,8 +23,7 @@
 #' @returns A matrix of type integer. Has one additional row with the rank caps
 #' If handle_ties = "average" then it is a matrix of type numeric.
 #'
-#'
-#' @export
+#'@export
 #'
 #' @examples
 #'

@@ -22,3 +22,5 @@ Imports:
     MatrixGenerics,
     matrixStats,
     sparseMatrixStats
+Suggests: 
+    GSEABase
