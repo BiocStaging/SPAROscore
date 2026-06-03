@@ -344,7 +344,6 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #' @returns A numeric with the scores for each sample/cell/spot
 #'
 #'
-#' @export
 #'
 #' @examples
 #' sparorank_output <- get_sparoranks(counts_data)
@@ -398,3 +397,125 @@ compute_sparoscores <- function(sparoranks,
     return(sparoscores)
 }
 
+
+
+
+#' Title
+#'
+#' @param seurat_object
+#' @param signature_genes
+#' @param assay
+#' @param layer
+#' @param use_existing_sparoranks
+#' @param store_sparoranks
+#' @param count_caps
+#' @param rank_caps
+#' @param handle_ties
+#' @param handle_missing_genes
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+augment_sparoscores_seurat <- function(seurat_object,
+                                       signature_genes,
+                                       assay = NULL,
+                                       layer = NULL,
+                                       use_existing_sparoranks = FALSE,
+                                       store_sparoranks = FALSE,
+                                       count_caps = NULL,
+                                       rank_caps = NULL,
+                                       handle_ties = "min",
+                                       handle_missing_genes = "skip"){
+
+    # assign the default assay as RNA unless provided
+    assay <- ifelse(is.null(assay), "RNA", assay)
+
+    # assign the default layer as counts unless provided
+    layer <- ifelse(is.null(layer), "count", layer)
+
+    # if user ask to use pre-calculated ranks
+    if(use_existing_sparoranks){
+        # extract precalculated sparoranks and rank_caps
+        sparoranks <- Seurat::GetAssayData(seurat_object,
+                                   assay = assay,
+                                   layer = "sparoranks")
+
+        # set rank_caps to pre-calculated values unless provided by the user
+        if(is.null(rank_caps)){
+            rank_caps <- as.numeric(unlist(seurat_object[["SPARO_rank_caps"]]))
+            names(rank_caps) <- rownames(seurat_object[[]])
+        }
+        else{
+            rank_caps <- rank_caps
+        }
+
+
+        sparoscores <- get_sparoscores(sparoranks =  sparoranks,
+                                       rank_caps = rank_caps,
+                                       signature_genes =  signature_genes,
+                                       handle_missing_genes =
+                                           handle_missing_genes)
+    }
+    else{
+        #extract count matrix from data
+        counts_data <- Seurat::GetAssayData(seurat_object,
+                                        assay = assay,
+                                        layer = layer)
+
+        # set count caps to geometric averages unless provided by the user
+        if(is.null(count_caps)){
+            count_caps <- compute_geometric_average(counts_data)
+        }
+        else{
+            count_caps <- count_caps
+        }
+
+
+        # get outputs for sparoranking function
+        get_sparoranks_output <- get_sparoranks(counts_data = counts_data,
+                                                count_caps = count_caps,
+                                                handle_ties = handle_ties)
+
+        # set sparoranks for future input
+        sparoranks <- get_sparoranks_output$sparoranks
+
+
+        # set rank_caps to geometric averages unless provided by the user
+        if(is.null(rank_caps)){
+            rank_caps <- get_sparoranks_output$rank_caps
+        }
+        else{
+            rank_caps <- rank_caps
+        }
+
+
+        sparoscores <- get_sparoscores(sparoranks =  sparoranks,
+                                       rank_caps = rank_caps,
+                                       signature_genes =  signature_genes,
+                                       handle_missing_genes =
+                                           handle_missing_genes)
+    }
+
+
+
+    # store the ranks in sparoranks layer of the assay if user asks
+    if(store_sparoranks){
+        seurat_object <- Seurat::SetAssayData(object = seurat_object,
+                                              assay = assay,
+                                              layer = "sparoranks",
+                                              new.data = sparoranks)
+    }
+
+
+    # append the rank_caps and sparoscores to metadata
+    sparoscores_df <- as.data.frame(sparoscores,
+                                    row.names = rownames(sparoscores))
+
+    sparoscores_df$SPARO_rank_caps <- rank_caps
+
+    seurat_object <- Seurat::AddMetaData(object = seurat_object,
+                                         metadata = sparoscores_df)
+
+    return(seurat_object)
+}
