@@ -2,28 +2,52 @@
 % Please edit documentation in R/helper_functions.R
 \name{validate_signature}
 \alias{validate_signature}
-\title{Identify valid and missing signature genes}
+\title{Validate a gene signature against available genes}
 \usage{
 validate_signature(signature, all_genes)
 }
 \arguments{
-\item{signature}{A character vector of genes for which the user wants to
-compute signature score}
+\item{signature}{Character vector containing the genes that define the
+signature to be scored.}
 
-\item{all_genes}{A character vector of all the genes for which
-pre-calculated ranks are available}
+\item{all_genes}{Character vector of genes for which pre-computed ranks are
+available.}
 }
 \value{
-A list of two character vectors. Genes for which ranks are available
-followed by genes for which ranks are not available
+A named list with two elements:
+\describe{
+  \item{valid_genes}{Character vector of signature genes found in
+  `all_genes` and therefore available for scoring.}
+  \item{missing_genes}{Character vector of signature genes not found in
+  `all_genes`.}
+}
 }
 \description{
-validate_signature() is a function to identify and report the genes from the
-user defined signature gene set for which pre-calculated are ranks available
-and can be used in signature scoring
+Checks whether the genes in a user-supplied signature are present in a
+reference set of genes with available pre-computed ranks. The function
+returns the subset of signature genes that can be used for scoring and the
+subset that are missing.
+}
+\details{
+A warning is issued if one or more signature genes are not found in
+`all_genes`. An error is raised if none of the supplied signature genes are
+present.
+
+
+The order of genes in `valid_genes` matches their order in the input
+`signature`. Missing genes are reported in a warning message. If no
+signature genes are found in `all_genes`, the function stops with an error.
 }
 \examples{
-validate_signature(c("CCR7", "CD62L"), c("CCR7", "CD27",  "CD28"))
+validate_signature(
+  signature = c("CCR7", "CD62L"),
+  all_genes = c("CCR7", "CD27", "CD28")
+)
 
-validate_signature(gene_signature, rownames(sparoranks))
+validate_signature(
+  signature = gene_signature,
+  all_genes = rownames(sparoranks)
+)
+
+
 }

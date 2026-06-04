@@ -2,25 +2,42 @@
 % Please edit documentation in R/helper_functions.R
 \name{impute_missing_gene_ranks}
 \alias{impute_missing_gene_ranks}
-\title{Impute missing genes ranks with cap values}
+\title{Impute ranks for missing signature genes}
 \usage{
 impute_missing_gene_ranks(incomplete_ranks, rank_cap, missing_genes)
 }
 \arguments{
-\item{incomplete_ranks}{A numeric vector of the gene ranks  in a cell/sample}
+\item{incomplete_ranks}{Numeric vector containing the ranks of signature
+genes that are present in a cell, sample, or spatial location.}
 
-\item{rank_cap}{A numeric value of the rank_cap for the particular cell/spot}
+\item{rank_cap}{Numeric value used to impute ranks for missing genes.
+Typically represents the maximum rank considered during scoring.}
 
-\item{missing_genes}{A character vector of the missing genes for which ranks
-should be imputed}
+\item{missing_genes}{Character vector of signature genes that are absent
+from the input data and therefore require rank imputation.}
 }
 \value{
-A numeric vector of the gene ranks with the missing genes
+A numeric vector containing the original ranks in
+  `incomplete_ranks` followed by imputed ranks for each gene in
+  `missing_genes`.
 }
 \description{
-impute_missing_gene_ranks() is a function to impute the ranks of
-missing genes with the rank_cap.
+Replaces missing signature genes by assigning each of them a rank equal to
+`rank_cap`. The imputed ranks are appended to the supplied vector of
+available gene ranks, producing a complete rank vector for downstream
+signature scoring.
+}
+\details{
+One value equal to `rank_cap` is added for each gene listed in
+`missing_genes`. If `missing_genes` is empty, the input vector is returned
+unchanged.
 }
 \examples{
-impute_missing_gene_ranks(c(1,2,3,4,5,6,7,8), 5, c("CD27", "CD28"))
+impute_missing_gene_ranks(
+  incomplete_ranks = c(1, 2, 3, 4, 5, 6, 7, 8),
+  rank_cap = 5,
+  missing_genes = c("CD27", "CD28")
+)
+
+
 }

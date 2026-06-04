@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{compute_sparoscore_per_cell}
 \alias{compute_sparoscore_per_cell}
-\title{Compute SPAROscore for a single sample/cell/spot for a single signature}
+\title{Compute a SPAROscore for a single sample, cell, or spatial location}
 \usage{
 compute_sparoscore_per_cell(
   signature_ranks_vector,
@@ -12,28 +12,54 @@ compute_sparoscore_per_cell(
 )
 }
 \arguments{
-\item{signature_ranks_vector}{integer vector of original gene ranks of the
-signature genes for a single spot/cell/sample}
+\item{signature_ranks_vector}{Numeric or integer vector containing the ranks
+of signature genes for a single sample, cell, or spatial location.}
 
-\item{rank_cap}{numeric at which signature ranks are capped before computing
-sparoscores. Defaults to rank of geometric average expression of cell/sample}
+\item{rank_cap}{Numeric value used to cap gene ranks before score
+calculation. Typically corresponds to the rank of the geometric mean
+expression value for the sample.}
 
-\item{handle_missing_genes}{character string specifying how signature genes
-missing in the imput dataset are handled.
-Defaults to "skip", removing those genes from the analyses
-"impute" adds zero expression values to all these genes in the input dataset}
+\item{handle_missing_genes}{Character string specifying how signature genes
+absent from the input data should be handled:
+\itemize{
+\item "skip" (default): exclude missing genes from the score
+calculation.
+\item "impute": include missing genes by assigning them the capped
+rank value (rank_cap).
+}}
 
-\item{missing_geneset}{character vector of signature genes missing from input}
+\item{missing_geneset}{Character vector containing signature genes that are
+not present in the input dataset.}
 }
 \value{
-A numeric of sparoscore for the particular sample/cell/spot
+A single numeric value representing the SPAROscore for the specified
+sample, cell, or spatial location.
 }
 \description{
-compute_sparoscore_per_cell() is a function to compute SPAROscore for a
-single column based on the gene rankings of signature genes and rank cap
-SPAROscore is Spearman Footrule Distance metric of signature ranks
-from the rank cap. They are then normalized with the
-theoretically maximum possible Spearman Footrule Distance.
+Calculates the SPAROscore for a single expression profile using the ranks of
+genes in a signature and a corresponding rank cap. The score is based on the
+normalized Spearman footrule distance between the observed signature gene
+ranks and the worst-case ranking in which all genes are assigned the rank
+cap.
+}
+\details{
+Prior to scoring, all ranks greater than rank_cap are truncated to
+rank_cap. Missing signature genes can either be ignored or imputed with
+the capped rank.
+
+
+The SPAROscore is computed in four steps:
+\enumerate{
+\item All ranks greater than rank_cap are replaced with rank_cap.
+\item Missing genes are optionally imputed with the capped rank.
+\item The Spearman footrule distance between the observed ranks and the
+worst-case ranking (all genes assigned rank_cap) is calculated.
+\item The distance is normalized by the maximum theoretically possible
+Spearman footrule distance for a signature of the same size.
+}
+
+Scores range from 0 to 1, where larger values indicate that signature genes
+tend to have higher expression ranks relative to the cap.
 }
 \examples{
 # validate gene signatures
@@ -50,8 +76,8 @@ sparoranks <- get_sparoranks_from_counts(counts_data)
 
 
 compute_sparoscore_per_cell(
-signature_ranks_vector = sparoranks[signature_genes, cell_id][1:num_genes],
-rank_cap = sparoranks[signature_genes, cell_id][num_genes + 1],
+signature_ranks_vector = sparoranks$sparoranks[signature_genes, cell_id],
+rank_cap = sparoranks$rank_caps[cell_id],
 handle_missing_genes = "skip",
 missing_geneset = missing_genes)
 

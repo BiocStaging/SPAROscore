@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{get_sparoranks_from_counts}
 \alias{get_sparoranks_from_counts}
-\title{Compute column-wise ranks with the respective rank caps}
+\title{Generate SPAROranks from expression count data}
 \usage{
 get_sparoranks_from_counts(
   counts_data,
@@ -11,28 +11,71 @@ get_sparoranks_from_counts(
 )
 }
 \arguments{
-\item{counts_data}{A matrix-like object of counts where
-columns are spots/cells/samples and rows are genes.
-Can handle matrix, sparsematrix, delayedmatrix}
+\item{counts_data}{A matrix-like object containing expression counts, with
+genes in rows and samples, cells, or spatial locations in columns.
+Supported inputs include base matrices, sparse matrices
+(Matrix::sparseMatrix), and delayed matrices
+(DelayedArray::DelayedMatrix).}
 
-\item{count_caps}{A optional numeric vector comprising the expresison values
-for each column to be used as capping value. By default the geometric average
-counts of each column will be used as count_caps}
+\item{count_caps}{Optional numeric vector containing the expression values
+used as rank caps for each column. The length must equal the number of
+columns in counts_data. By default, column-wise geometric mean
+expression values computed by compute_geometric_average() are used.}
 
-\item{handle_ties}{A character string specifying how ties are treated.
-"min" by default. Can be "min", "max", "average", or "random".}
+\item{handle_ties}{Character string specifying how tied expression values
+are ranked. Passed directly to MatrixGenerics::colRanks() via the
+ties.method argument. Supported options are:
+\describe{
+\item{"min"}{Assign the minimum rank to tied values (default).}
+\item{"max"}{Assign the maximum rank to tied values.}
+\item{"average"}{Assign the average rank to tied values.}
+\item{"random"}{Break ties at random.}
+}}
 }
 \value{
-A matrix of type integer. Has one additional row with the rank caps
-If handle_ties = "average" then it is a matrix of type numeric.
+A named list with two elements:
+\describe{
+\item{sparoranks}{A matrix of column-wise gene ranks. Lower rank values
+correspond to higher expression levels. The matrix is typically of type
+integer, except when handle_ties = "average", in which case it is
+numeric.}
+
+\item{rank_caps}{A numeric vector containing the rank assigned to the cap
+value in each column.}
+}
 }
 \description{
-get_sparoranks_from_counts() takes counts matrix data as input
-and returns column wise ascending ranks matrix.
-Uses MatrixGenerics::colRanks()
-Ties are handles by minimum by default
+Computes column-wise gene expression ranks from a count matrix and derives
+rank caps for each sample, cell, or spatial location. Ranking is performed
+using MatrixGenerics::colRanks(), allowing efficient processing of dense,
+sparse, and delayed matrix representations.
+}
+\details{
+Rank caps are incorporated by temporarily appending a row of cap expression
+values to the count matrix before ranking. The resulting rank of each cap
+value is returned separately from the gene rank matrix.
+
+
+Gene expression values are ranked in descending order by applying
+MatrixGenerics::colRanks() to the negated count matrix. Consequently, the
+most highly expressed gene in a column receives rank 1.
+
+To determine cap ranks, the supplied cap values are appended as an
+additional row prior to ranking. After ranking, gene ranks and cap ranks are
+separated and returned independently.
+
+Informative messages are printed indicating whether ranking is being
+performed on a base matrix, sparse matrix, or delayed matrix object.
 }
 \examples{
-get_sparoranks_from_counts(counts_data,
-handle_ties = "min", rank_cap_metric = "geometric_average")
+# Compute SPARO ranks using geometric mean expression as rank caps
+rank_results <- get_sparoranks_from_counts(counts_data)
+
+# Specify custom cap values
+rank_results <- get_sparoranks_from_counts(
+counts_data,
+count_caps = rep(10, ncol(counts_data))
+)
+
+
 }

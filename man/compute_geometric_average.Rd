@@ -2,24 +2,46 @@
 % Please edit documentation in R/helper_functions.R
 \name{compute_geometric_average}
 \alias{compute_geometric_average}
-\title{Compute geometric average of counts}
+\title{Compute column-wise geometric mean expression values}
 \usage{
 compute_geometric_average(counts_data)
 }
 \arguments{
-\item{counts_data}{A matrixilike object of counts where
-columns are spots/cells/samples and rows are genes.
-Can handle matrix, sparsematrix, delayedmatrix}
+\item{counts_data}{A matrix-like object containing expression counts, with
+genes in rows and samples, cells, or spatial locations in columns.
+Supported inputs include base matrices, sparse matrices
+(Matrix::sparseMatrix), and delayed matrices
+(DelayedArray::DelayedMatrix).}
 }
 \value{
-A numeric vector of column-wise geometric averages
+A numeric vector containing the column-wise geometric mean
+expression values. The length of the vector equals the number of columns
+in counts_data.
 }
 \description{
-compute_geometric_average() computes geomwtric average expression for
-each sample/cell/spot to be used to find rank caps
+Computes the geometric mean expression for each sample, cell, or spatial
+location in a count matrix. These values are used to derive rank caps for
+downstream signature scoring.
+}
+\details{
+The geometric mean is calculated as:
+\deqn{\exp(\mathrm{mean}(\log(1 + x)))}
+where \eqn{x} represents the expression values in a column.
+
+
+A pseudocount of 1 is added to all expression values before log
+transformation to avoid undefined values for zero counts. Missing values are
+ignored when computing the mean log expression.
 }
 \examples{
-compute_geometric_average(counts_data)
+counts <- matrix(
+c(0, 5, 10,
+2, 0, 20,
+1, 3, 0),
+nrow = 3
+)
+
+compute_geometric_average(counts)
 
 
 }
