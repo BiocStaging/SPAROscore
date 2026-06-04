@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{compute_sparoscores}
 \alias{compute_sparoscores}
-\title{Compute SPAROscore: sparsity aware robust gene signature scores}
+\title{Compute SPAROscores for a gene signature}
 \usage{
 compute_sparoscores(
   sparoranks,
@@ -12,33 +12,73 @@ compute_sparoscores(
 )
 }
 \arguments{
-\item{sparoranks}{matrix outputted by get_sparoranks()}
+\item{sparoranks}{A matrix of gene ranks produced by
+get_sparoranks_from_counts(). Rows correspond to genes and columns
+correspond to samples, cells, or spatial locations.}
 
-\item{rank_caps}{numeric vector containing column-wise rank caps to be used}
+\item{rank_caps}{Numeric vector containing the rank cap for each column of
+sparoranks. Typically obtained from the rank_caps element returned by
+get_sparoranks_from_counts().}
 
-\item{signature_genes}{character vector of gene names/ids. Note that the
-naming scheme should match the original input data.
-(i.e) rownames(counts_data)}
+\item{signature_genes}{Character vector containing the genes that define the
+signature of interest. Gene identifiers must match the row names of
+sparoranks.}
 
-\item{handle_missing_genes}{character string specifying how signature genes
-missing in the imput dataset are handled.
-Defaults to "skip", removing those genes from the analyses
-"impute" adds zero expression values to all these genes in the input dataset}
+\item{handle_missing_genes}{Character string specifying how signature genes
+absent from sparoranks should be handled:
+\itemize{
+\item "skip" (default): exclude missing genes from score
+calculation.
+\item "impute": assign missing genes the capped rank value and include
+them in the score calculation.
+}}
 }
 \value{
-A numeric with the scores for each sample/cell/spot
+A named numeric vector of SPAROscores, with one score per column of
+sparoranks.
 }
 \description{
-compute_sparoscores() computes signature score for each column of the data.
-Scores are based on Spearman Footrule Distance of the signature gene ranks
-from the rank cap (default to the rank of geometric average expression)
-for every sample/cell/spot
+Computes SPAROscores for all samples, cells, or spatial locations using
+pre-computed SPARO ranks and rank caps. Scores quantify the enrichment of a
+gene signature based on the normalized Spearman footrule distance between
+observed signature gene ranks and the corresponding rank cap.
+}
+\details{
+Signature genes that are not present in the ranked dataset can either be
+excluded from the calculation or imputed using the capped rank value.
+
+
+The supplied signature is first validated against the genes present in
+sparoranks. Missing genes are reported and handled according to
+handle_missing_genes.
+
+For each column, gene ranks are extracted for the signature genes and passed
+to compute_sparoscore_per_cell(), which computes a normalized Spearman
+footrule distance score. Higher scores indicate that signature genes tend to
+occupy higher expression ranks relative to the column-specific rank cap.
 }
 \examples{
-sparorank_output <- get_sparoranks(counts_data)
-sparoscores <- compute_sparoscores(sparoranks = sparorank_output$sparoranks,
-                                rank_caps = sparorank_output$rank_caps
-                                signature_genes = c("geneA", "geneC"))
+# Generate SPARO ranks and rank caps
+rank_results <- get_sparoranks_from_counts(counts_data)
 
+# Compute scores for a gene signature
+sparoscores <- compute_sparoscores(
+sparoranks = rank_results$sparoranks,
+rank_caps = rank_results$rank_caps,
+signature_genes = c("CCR7", "IL7R", "LTB")
+)
 
+# Include missing signature genes by imputing capped ranks
+sparoscores <- compute_sparoscores(
+sparoranks = rank_results$sparoranks,
+rank_caps = rank_results$rank_caps,
+signature_genes = c("CCR7", "IL7R", "LTB"),
+handle_missing_genes = "impute"
+)
+
+}
+\seealso{
+\code{\link{get_sparoranks_from_counts}},
+\code{\link{compute_sparoscore_per_cell}},
+\code{\link{validate_signature}}
 }

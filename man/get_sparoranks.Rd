@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_sparoranks_generic.R
 \name{get_sparoranks}
 \alias{get_sparoranks}
-\title{Compute Gene Ranks for SPAROscore}
+\title{Compute gene ranks and rank caps for SPAROscore}
 \usage{
 get_sparoranks(
   counts_data,
@@ -12,23 +12,26 @@ get_sparoranks(
 }
 \arguments{
 \item{counts_data}{A matrix-like object containing gene expression counts,
-where rows correspond to genes and columns correspond to samples, cells,
-or spatial domains.
+with genes in rows and samples, cells, or spatial locations in columns.
 
-Supported input types include:
-* matrix
-* sparseMatrix
-* DelayedMatrix
-* data.frame}
+Supported input classes include:
+\itemize{
+\item matrix
+\item Matrix::sparseMatrix
+\item DelayedArray::DelayedMatrix
+\item data.frame
+}}
 
-\item{count_caps}{An optional numeric vector specifying count cap values for
-each column of counts_data. These values are used to determine the
-corresponding rank caps. By default, the geometric mean count of
-each column is used.}
+\item{count_caps}{Optional numeric vector containing count cap values for
+each column. These values are used to determine the corresponding rank
+caps. If NULL, column-wise geometric mean expression values computed by
+\code{\link{compute_geometric_average}} are used.}
 
-\item{handle_ties}{Character string specifying how tied count values are
-ranked. Passed to MatrixGenerics::colRanks().
-Supported options are:
+\item{handle_ties}{Character string specifying how tied expression values
+should be ranked. Passed directly to
+MatrixGenerics::colRanks(ties.method = ...).
+
+Supported values are:
 \describe{
 \item{"min"}{Assign the minimum rank to tied values (default).}
 \item{"max"}{Assign the maximum rank to tied values.}
@@ -37,42 +40,56 @@ Supported options are:
 }}
 }
 \value{
-A list containing:
+A named list with two elements:
 \describe{
-\item{sparoranks}{A matrix of gene ranks with the same dimensions as
-counts_data. Integer-valued unless handle_ties = "average", in which
-case ranks may be numeric.}
-\item{rank_caps}{A numeric vector containing the rank cap associated
-with each column.}
+\item{sparoranks}{
+Matrix of gene ranks with the same dimensions as counts_data.
+Ranks are integer-valued unless handle_ties = "average".
+}
+
+\item{rank_caps}{
+Numeric vector containing the rank cap associated with each column.
+}
 }
 }
 \description{
-Generate gene rank matrices and rank caps for SPAROscore calculations.
+Generates gene rank matrices and rank caps required for SPAROscore
+calculations.
 }
 \details{
-\emph{get_sparoranks()} computes column-wise ascending gene ranks  and the
-rank caps from count data and returns the inputs required by
-\emph{get_sparoscores()}. The function uses MatrixGenerics::colRanks()
-internally and supports a variety of matrix-like input formats,
-including data.frames, matrices, sparse matrices, and delayed matrices.
+get_sparoranks() computes column-wise gene ranks from expression count
+data and derives a rank cap for each sample, cell, or spatial location.
+The resulting rank matrix and rank caps can be supplied directly to
+\code{\link{compute_sparoscores}}.
 
-By default, ties are resolved using the minimum rank. Rank caps are
-determined from the geometric mean count of each column, although custom
-count caps can also be supplied.
+Internally, ranks are computed using
+MatrixGenerics::colRanks(). Gene expression values are ranked in
+descending order, such that the most highly expressed gene in a column
+receives rank 1.
+
+This function is implemented as an S4 generic and supports multiple input
+formats for counts_data including base matrices, sparse matrices,
+delayed matrices, and data frames.
 
 
-Gene ranks are computed independently for each column using ascending order
-of expression values. The resulting rank matrix and rank caps serve as the
-primary inputs to \emph{get_sparoscores()}, which computes SPAROscores
-based on deviations from the rank caps.
+A count cap value is appended to each column before ranking and its resulting
+rank is extracted as the column-specific rank cap. By default, count caps
+are derived from the geometric mean expression value of each column.
+
+The returned sparoranks matrix and rank_caps vector are intended for use
+with \code{\link{get_sparoscores}}.
 }
 \examples{
-# Compute SPARO ranks from a dense, sparse, or delayed matrix
-sparorank_output <- get_sparoranks(counts_data)
+# Compute SPARO ranks
+rank_results <- get_sparoranks(counts_data)
 
-# Access the rank matrix and rank caps
-sparoranks <- sparorank_output$sparoranks
-rank_caps <- sparorank_output$rank_caps
+# Extract outputs
+sparoranks <- rank_results$sparoranks
+rank_caps <- rank_results$rank_caps
 
-
+# Use custom tie handling
+rank_results <- get_sparoranks(
+counts_data,
+handle_ties = "average"
+)
 }

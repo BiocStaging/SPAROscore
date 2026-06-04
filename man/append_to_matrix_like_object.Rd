@@ -2,24 +2,49 @@
 % Please edit documentation in R/helper_functions.R
 \name{append_to_matrix_like_object}
 \alias{append_to_matrix_like_object}
-\title{Append numeric vector to matrix like objects. Geeneralised rbind()}
+\title{Append a numeric vector as a new row to a matrix-like object}
 \usage{
 append_to_matrix_like_object(matrix_like_object, numeric_vector)
 }
 \arguments{
-\item{matrix_like_object}{a matrix, or sparseMatrix, or DelayedArrays}
+\item{matrix_like_object}{A matrix-like object to which a new row will be
+appended. Supported classes are base matrices, sparse matrices from the
+Matrix package, and delayed matrices from the DelayedArray package.}
 
-\item{numeric_vector}{numeric vector}
+\item{numeric_vector}{Numeric vector to append as a new row. Its length must
+equal the number of columns in matrix_like_object.}
 }
 \value{
-A matrix-like object with an additional row
+An object of the same class as matrix_like_object, with
+numeric_vector appended as an additional row.
 }
 \description{
-append_to_matrix_like_object() function converts a numeric vector to
-matrix, or sparseMatrix, or DelayedArrays and then appends it to
-the respective matrix object. This way, original matrix type is conserved.
+Appends a numeric vector to a matrix-like object while preserving the
+original object class. Supported input types include base R matrices,
+Matrix::sparseMatrix objects, and DelayedArray::DelayedMatrix objects.
+}
+\details{
+The supplied vector is converted to the appropriate one-row representation
+before being combined with the input object.
+
+
+The function validates that the length of numeric_vector matches the
+number of columns in matrix_like_object. An error is raised if the
+dimensions are incompatible or if the supplied object class is not
+supported.
 }
 \examples{
-append_to_matrix_like_object(counts_data, cap_values)
+# Base matrix
+mat <- matrix(1:6, nrow = 2)
+append_to_matrix_like_object(mat, c(7, 8, 9))
+
+# Sparse matrix
+sparse_mat <- Matrix::Matrix(mat, sparse = TRUE)
+append_to_matrix_like_object(sparse_mat, c(7, 8, 9))
+
+# Delayed matrix
+delayed_mat <- DelayedArray::DelayedArray(mat)
+append_to_matrix_like_object(delayed_mat, c(7, 8, 9))
+
 
 }

@@ -2,13 +2,13 @@
 % Please edit documentation in R/helper_functions.R
 \name{augment_sparoscores_seurat}
 \alias{augment_sparoscores_seurat}
-\title{Title}
+\title{Add SPAROscores to a Seurat object}
 \usage{
 augment_sparoscores_seurat(
   seurat_object,
   signature_genes,
-  assay = NULL,
-  layer = NULL,
+  assay = "RNA",
+  layer = "count",
   use_existing_sparoranks = FALSE,
   store_sparoranks = FALSE,
   count_caps = NULL,
@@ -18,8 +18,101 @@ augment_sparoscores_seurat(
 )
 }
 \arguments{
-\item{handle_missing_genes}{}
+\item{seurat_object}{A Seurat object containing expression data.}
+
+\item{signature_genes}{Character vector containing the genes that define the
+signature to score. Gene identifiers must match the feature names in the
+selected assay.}
+
+\item{assay}{Character string specifying the assay from which expression
+data should be extracted. Defaults to "RNA".}
+
+\item{layer}{Character string specifying the assay layer containing
+expression counts. Defaults to "counts".}
+
+\item{use_existing_sparoranks}{Logical indicating whether previously
+calculated SPARO ranks stored in the assay layer "sparoranks" should be
+used instead of recalculating ranks from expression data.}
+
+\item{store_sparoranks}{Logical indicating whether newly computed SPARO
+ranks should be stored in the selected assay under the layer name
+"sparoranks".}
+
+\item{count_caps}{Optional numeric vector of expression values used to
+derive rank caps during SPARO rank calculation. If NULL, geometric mean
+expression values are computed using compute_geometric_average().}
+
+\item{rank_caps}{Optional numeric vector of rank cap values used during
+SPAROscore calculation. If NULL, rank caps returned by
+get_sparoranks_from_counts() are used.}
+
+\item{handle_ties}{Character string specifying how tied expression values
+are ranked. Passed to get_sparoranks_from_counts(). Supported values are
+"min", "max", "average", and "random".}
+
+\item{handle_missing_genes}{Character string specifying how signature genes
+absent from the dataset should be handled:
+\itemize{
+\item "skip" (default): exclude missing genes from score calculation.
+\item "impute": include missing genes by assigning them the capped
+rank value.
+}}
+}
+\value{
+The input Seurat object with:
+\itemize{
+\item A metadata column containing SPAROscores for the supplied gene
+signature.
+\item A metadata column named "SPARO_rank_caps" containing the rank cap
+for each cell.
+\item Optionally, a "sparoranks" layer in the selected assay if
+store_sparoranks = TRUE.
+}
 }
 \description{
-Title
+Computes SPAROscores for a gene signature and stores the resulting scores in
+the metadata of a Seurat object. SPARO ranks can either be calculated from
+an expression layer or retrieved from previously stored SPARO ranks.
+}
+\details{
+Optionally, the computed SPARO ranks can be stored as an assay layer for
+reuse in subsequent analyses.
+
+
+If use_existing_sparoranks = FALSE, SPARO ranks are computed from the
+selected assay layer before score calculation.
+
+If use_existing_sparoranks = TRUE, the function expects a layer named
+"sparoranks" to already exist in the selected assay. Stored rank caps are
+retrieved from the metadata column "SPARO_rank_caps" unless explicitly
+provided through rank_caps.
+
+Computed SPAROscores are appended to the Seurat object's metadata and can be
+accessed through seurat_object[[]].
+}
+\examples{
+# Compute SPAROscores directly from RNA counts
+seurat_object <- augment_sparoscores_seurat(
+seurat_object = seurat_object,
+signature_genes = c("CCR7", "IL7R", "LTB")
+)
+
+# Store SPARO ranks for later reuse
+seurat_object <- augment_sparoscores_seurat(
+seurat_object = seurat_object,
+signature_genes = c("CCR7", "IL7R", "LTB"),
+store_sparoranks = TRUE
+)
+
+# Reuse previously stored SPARO ranks
+seurat_object <- augment_sparoscores_seurat(
+seurat_object = seurat_object,
+signature_genes = c("CCR7", "IL7R", "LTB"),
+use_existing_sparoranks = TRUE
+)
+
+}
+\seealso{
+\code{\link{get_sparoranks_from_counts}},
+\code{\link{compute_sparoscores}}
 }
