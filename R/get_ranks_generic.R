@@ -104,7 +104,7 @@ setMethod("get_ranks",
               #call the helper function
               ranks <- get_ranks_from_counts(
                   counts,
-                  count_caps = compute_geometric_average(counts),
+                  count_caps = count_caps,
                   handle_ties = "min")
               return(ranks)
           }
@@ -121,7 +121,7 @@ setMethod("get_ranks",
               #call the helper function
               ranks <- get_ranks_from_counts(
                   counts,
-                  count_caps = compute_geometric_average(counts),
+                  count_caps = count_caps,
                   handle_ties = "min")
               return(ranks)
           }
@@ -138,7 +138,7 @@ setMethod("get_ranks",
               #call the helper function
               ranks <- get_ranks_from_counts(
                   counts,
-                  count_caps = compute_geometric_average(counts),
+                  count_caps = count_caps,
                   handle_ties = "min")
               return(ranks)
           }
@@ -155,7 +155,7 @@ setMethod("get_ranks",
               #call the helper function
               ranks <- get_ranks_from_counts(
                   as.matrix(counts),
-                  count_caps = compute_geometric_average(counts),
+                  count_caps = count_caps,
                   handle_ties = "min")
               return(ranks)
           }
