@@ -2,15 +2,14 @@
 % Please edit documentation in R/sparoscore_generic.R
 \name{sparoscore}
 \alias{sparoscore}
-\title{Title}
+\title{Compute SPAROscores}
 \usage{
 sparoscore(
   data,
   signatures,
+  data_has_ranks = FALSE,
   assay = "RNA",
   layer = "count",
-  use_existing_ranks = FALSE,
-  store_ranks = FALSE,
   count_caps = NULL,
   rank_caps = NULL,
   handle_ties = "min",
@@ -18,8 +17,215 @@ sparoscore(
 )
 }
 \arguments{
-\item{handle_missing_genes}{}
+\item{data}{Input data object.
+Supported classes include:
+\itemize{
+  \item Dense matrices (`matrix`)
+  \item Sparse matrices (`sparseMatrix`)
+  \item Delayed matrices (`DelayedMatrix`)
+  \item Data frames
+  \item Seurat objects
+  \item `SummarizedExperiment` (and derived objects)
+  \item `SingleCellExperiment`
+  \item `SpatialExperiment`
+  \item `RangedSummarizedExperiment`
+}}
+
+\item{signatures}{Gene signature(s) to score.
+Supported inputs include:
+\itemize{
+  \item A character vector representing a single gene signature.
+  \item A named list of character vectors representing multiple signatures.
+  \item A `GeneSet` object.
+  \item A `GeneSetCollection` object.
+}}
+
+\item{data_has_ranks}{Logical indicating whether the supplied data already
+contains feature ranks. If `FALSE` (default), ranks are computed from
+expression values prior to scoring.}
+
+\item{assay}{Character string specifying the name of
+the assay containing the data to use.
+When data_has_ranks = FALSE, this assay should contain expression counts.
+When data_has_ranks = TRUE, it should contain pre-computed ranks.
+Defaults to "RNA" for Seurat objects.
+Defaults to "counts" for SummarizedExperiment-derived objects.
+Ignored for matrix-like inputs.}
+
+\item{layer}{Character string specifying the name
+of the assay layer containing the data to use.
+When data_has_ranks = FALSE, this layer should contain expression counts.
+When data_has_ranks = TRUE, it should contain pre-computed ranks.
+Defaults to "count"
+Used only for Seurat objects.}
+
+\item{count_caps}{Optional numeric vector containing expression thresholds
+values for each column in the counts data.
+These values are used to determine the corresponding rank caps.
+Only used when data_has_ranks = FALSE.
+If NULL (default), values are computed using
+\code{\link{compute_geometric_average}}.}
+
+\item{rank_caps}{An optional named numeric vector containing the rank cap
+associated with each column of ranks data used during
+SPAROscore calculation. Typically obtained from the
+rank_caps component returned by .
+When data_has_ranks = TRUE and rank_cpas is NULL (default), rank caps are
+obtained from \code{\link{get_ranks}} for matrix-like objects,
+retrieved from the "rank_caps" column of metadata for Seurat and
+SummarizedExperiment objects}
+
+\item{handle_ties}{Character string specifying how tied expression values
+should be ranked. Passed directly to
+MatrixGenerics::colRanks(ties.method = ...).
+
+Supported values are:
+\describe{
+\item{"min"}{Assign the minimum rank to tied values (default).}
+\item{"max"}{Assign the maximum rank to tied values.}
+\item{"average"}{Assign the average rank to tied values.}
+\item{"random"}{Break ties at random.}
+}}
+
+\item{handle_missing_genes}{Character string specifying how signature genes
+absent from ranks should be handled.
+
+Supported options are:
+\describe{
+\item{"skip"}{
+Exclude missing genes from score calculation (default).
+}
+
+\item{"impute"}{
+Include missing genes by assigning them the capped rank value.
+}
+}}
+}
+\value{
+Method-dependent:
+\itemize{
+  \item Matrix-like inputs return a numeric matrix of SPAROscores.
+  \item Seurat inputs return the Seurat object with
+  \itemize{
+             \item One or more metadata columns containing SPAROscores
+             for the supplied signature(s).
+             \item A metadata column named "rank_caps" containing the
+             rank cap for each cell.
+             \item A "ranks" layer added to the selected assay
+             when ranks are calculated from expression data.
+         }
+  \item SummarizedExperiment-derived inputs return the same object with
+  \itemize{
+          \item One or more SPAROscore columns added to colData().
+          \item A "rank_caps" column added to colData().
+          \item A "ranks" assay added when ranks are computed from
+          expression data.
+         }
+}
 }
 \description{
-Title
+Compute SPAROscores for one or more gene signatures from a variety of
+supported data containers.
+`sparoscore()` is an S4 generic with methods for matrix-like objects,
+Seurat objects, and Bioconductor `SummarizedExperiment`-derived classes.
+Depending on the input type, the function either returns a matrix of
+SPAROscores or appends SPAROscores to the input object's metadata.
+}
+\details{
+sparoscore() is an S4 generic that dispatches on the class of data.
+The method selected determines how SPAROscores are computed and where the
+results are stored.
+
+For matrix-like inputs (matrix, sparseMatrix, DelayedMatrix, and
+data.frame), the function returns a numeric matrix of SPAROscores.
+
+For Seurat objects, SPAROscores and rank caps are appended to the object's
+metadata. If ranks are computed from expression data, they are also stored
+in a "ranks" assay layer for future reuse.
+
+For SummarizedExperiment-derived objects, SPAROscores and rank caps are
+appended to colData(). If ranks are computed from expression data, they
+are also stored in a "ranks" assay.
+
+When data_has_ranks = FALSE, feature ranks are first computed using
+get_ranks(). When data_has_ranks = TRUE, the supplied ranks are used
+directly and rank computation is skipped.
+
+Missing signature genes can either be excluded from scoring ("skip") or
+assigned the capped rank value and included in score calculation
+("impute").
+}
+\examples{
+# ------------------------------------------------------------------
+# Matrix-like input
+# ------------------------------------------------------------------
+
+counts <- matrix(
+sample(0:10, 500, replace = TRUE),
+nrow = 50,
+dimnames = list(
+paste0("gene", 1:50),
+paste0("cell", 1:10)
+)
+)
+
+scores <- sparoscore(
+data = counts,
+signatures = c("gene1", "gene2", "gene3")
+)
+
+# Multiple signatures
+signatures <- list(
+SignatureA = c("gene1", "gene2", "gene3"),
+SignatureB = c("gene10", "gene11", "gene12")
+)
+
+scores <- sparoscore(
+data = counts,
+signatures = signatures
+)
+
+# ------------------------------------------------------------------
+# Seurat object
+# ------------------------------------------------------------------
+
+\dontrun{
+seurat_object <- sparoscore(
+data = seurat_object,
+signatures = c("CCR7", "IL7R", "LTB")
+)
+
+# Reuse previously computed ranks
+seurat_object <- sparoscore(
+data = seurat_object,
+signatures = c("CCR7", "IL7R", "LTB"),
+data_has_ranks = TRUE,
+layer = "ranks"
+)
+}
+
+# ------------------------------------------------------------------
+# SingleCellExperiment / SummarizedExperiment
+# ------------------------------------------------------------------
+
+\dontrun{
+sce <- sparoscore(
+data = sce,
+signatures = c("CCR7", "IL7R", "LTB")
+)
+
+sce <- sparoscore(
+data = sce,
+signatures = c("CCR7", "IL7R", "LTB"),
+data_has_ranks = TRUE,
+assay = "ranks"
+)
+}
+
+
+}
+\seealso{
+\code{\link{get_ranks}},
+\code{\link{get_scores}}
+\code{\link{compute_geometric_average}}
 }

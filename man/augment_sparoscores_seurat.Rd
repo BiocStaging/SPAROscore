@@ -7,10 +7,9 @@
 augment_sparoscores_seurat(
   seurat_object,
   signatures,
+  data_has_ranks = FALSE,
   assay = "RNA",
   layer = "count",
-  use_existing_ranks = FALSE,
-  store_ranks = FALSE,
   count_caps = NULL,
   rank_caps = NULL,
   handle_ties = "min",
@@ -18,36 +17,50 @@ augment_sparoscores_seurat(
 )
 }
 \arguments{
-\item{seurat_object}{A Seurat object containing expression data.}
+\item{seurat_object}{A Seurat object containing expression/rank data.}
 
-\item{signatures}{Character vector containing the genes that define the
-signature to score. Gene identifiers must match the feature names in the
-selected assay.}
+\item{signatures}{Gene signature(s) to score.
 
-\item{assay}{Character string specifying the assay from which expression
-data should be extracted. Defaults to "RNA".}
+Supported inputs include:
+\itemize{
+\item A character vector representing a single gene signature.
+\item A named list of character vectors representing multiple gene
+signatures.
+\item A GeneSet object.
+\item A GeneSetCollection object.
+}
 
-\item{layer}{Character string specifying the assay layer containing
-expression counts. Defaults to "counts".}
+#' Gene identifiers must use the same naming convention as the row names of
+ranks.
 
-\item{use_existing_ranks}{Logical indicating whether previously
-calculated SPARO ranks stored in the assay layer "ranks" should be
-used instead of recalculating ranks from expression data.}
 
-\item{store_ranks}{Logical indicating whether newly computed SPARO
-ranks should be stored in the selected assay under the layer name
-"ranks".}
+#' @param data_has_ranks Logical indicating whether previously
+calculated ranks are stored in the assay/layer.
+If TRUE, ranks are read directly from the assay layer.
+If FALSE (default), ranks are computed from counts data in the assay layer.}
+
+\item{assay}{Character string specifying the name of
+the assay containing the data to use.
+When data_has_ranks = FALSE, this assay should contain expression counts.
+When data_has_ranks = TRUE, it should contain pre-computed ranks.
+Defaults to "RNA"}
+
+\item{layer}{Character string specifying the name
+of the assay layer containing the data to use.
+When data_has_ranks = FALSE, this layer should contain expression counts.
+When data_has_ranks = TRUE, it should contain pre-computed ranks.
+Defaults to "count"}
 
 \item{count_caps}{Optional numeric vector of expression values used to
-derive rank caps during SPARO rank calculation. If NULL, geometric mean
+derive rank caps during rank calculation. If NULL, geometric mean
 expression values are computed using compute_geometric_average().}
 
 \item{rank_caps}{Optional numeric vector of rank cap values used during
 SPAROscore calculation. If NULL, rank caps returned by
-get_ranks_from_counts() are used.}
+get_ranks() are used.}
 
 \item{handle_ties}{Character string specifying how tied expression values
-are ranked. Passed to get_ranks_from_counts(). Supported values are
+are ranked. Passed to get_ranks(). Supported values are
 "min", "max", "average", and "random".}
 
 \item{handle_missing_genes}{Character string specifying how signature genes
@@ -59,60 +72,60 @@ rank value.
 }}
 }
 \value{
-The input Seurat object with:
+A Seurat object with:
 \itemize{
-\item A metadata column containing SPAROscores for the supplied gene
-signature.
-\item A metadata column named "SPARO_rank_caps" containing the rank cap
-for each cell.
-\item Optionally, a "ranks" layer in the selected assay if
-store_ranks = TRUE.
+\item One or more metadata columns containing SPAROscores for the supplied
+signature(s).
+\item A metadata column named "rank_caps" containing the rank cap for
+each cell.
+\item A "ranks" layer added to the selected assay when ranks are
+calculated from expression data.
 }
 }
 \description{
-Computes SPAROscores for a gene signature and stores the resulting scores in
-the metadata of a Seurat object. SPARO ranks can either be calculated from
-an expression layer or retrieved from previously stored SPARO ranks.
+Computes SPAROscores for one or more gene signature and stores the resulting
+scores in the metadata of a Seurat object.
+Ranks can either be calculated from
+an expression layer or retrieved from previously stored ranks.
 }
 \details{
-Optionally, the computed SPARO ranks can be stored as an assay layer for
-reuse in subsequent analyses.
+When data_has_ranks = FALSE, the function:
+\enumerate{
+\item Retrieves expression data from the specified assay and layer.
+\item Computes feature ranks using get_ranks().
+\item Calculates SPAROscores using get_scores().
+\item Stores the computed ranks in a new assay layer named "ranks".
+}
 
+When data_has_ranks = TRUE, the function:
+\enumerate{
+\item Retrieves pre-computed ranks from the specified assay and layer.
+\item Uses the supplied rank_caps or retrieves them from the
+"rank_caps" metadata column.
+\item Calculates SPAROscores using get_scores().
+}
 
-If use_existing_ranks = FALSE, SPARO ranks are computed from the
-selected assay layer before score calculation.
-
-If use_existing_ranks = TRUE, the function expects a layer named
-"ranks" to already exist in the selected assay. Stored rank caps are
-retrieved from the metadata column "SPARO_rank_caps" unless explicitly
-provided through rank_caps.
-
-Computed SPAROscores are appended to the Seurat object's metadata and can be
-accessed through seurat_object[[]].
+Computed scores and rank caps are appended to the Seurat object's metadata
+and can be accessed with seurat_object[[]].
 }
 \examples{
-# Compute SPAROscores directly from RNA counts
+# Compute SPAROscores from RNA counts
 seurat_object <- augment_sparoscores_seurat(
 seurat_object = seurat_object,
 signatures = c("CCR7", "IL7R", "LTB")
 )
 
-# Store SPARO ranks for later reuse
+# Compute scores using pre-computed ranks stored in a ranks layer
 seurat_object <- augment_sparoscores_seurat(
 seurat_object = seurat_object,
 signatures = c("CCR7", "IL7R", "LTB"),
-store_ranks = TRUE
-)
-
-# Reuse previously stored SPARO ranks
-seurat_object <- augment_sparoscores_seurat(
-seurat_object = seurat_object,
-signatures = c("CCR7", "IL7R", "LTB"),
-use_existing_ranks = TRUE
+data_has_ranks = TRUE,
+layer = "ranks"
 )
 
 }
 \seealso{
-\code{\link{get_ranks_from_counts}},
-\code{\link{compute_sparoscores}}
+\code{\link{get_ranks}},
+\code{\link{get_scores}},
+\code{\link{compute_geometric_average}}
 }

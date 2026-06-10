@@ -68,7 +68,7 @@ Informative messages are printed indicating whether ranking is being
 performed on a base matrix, sparse matrix, or delayed matrix object.
 }
 \examples{
-# Compute SPARO ranks using geometric mean expression as rank caps
+# Compute ranks using geometric mean expression as rank caps
 rank_results <- get_ranks_from_counts(counts)
 
 # Specify custom cap values

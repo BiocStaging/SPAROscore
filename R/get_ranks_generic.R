@@ -73,7 +73,7 @@
 #' @export
 #'
 #' @examples
-#' # Compute SPARO ranks
+#' # Compute ranks
 #' rank_results <- get_ranks(counts)
 #'
 #' # Extract outputs

@@ -70,8 +70,8 @@ rownames(counts))
 valid_genes <- valid_gene_signature$valid_genes
 missing_genes <- valid_gene_signature$missing_genes
 
-# get sparoroanks
-ranks <- get_ranks_from_counts(counts)
+# get ranks
+ranks <- get_ranks(counts)
 
 
 

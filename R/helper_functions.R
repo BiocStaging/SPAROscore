@@ -227,6 +227,7 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #'
 #'
 compute_geometric_average <-function(counts){
+    message("SPAROscore says: Calculating column-wise geometric averages")
     cap_values <- apply(counts, 2,
                         function(x){exp(mean(log(1+ x),
                                              na.rm = TRUE))})
@@ -296,7 +297,7 @@ compute_geometric_average <-function(counts){
 #'
 #'
 #' @examples
-#' # Compute SPARO ranks using geometric mean expression as rank caps
+#' # Compute ranks using geometric mean expression as rank caps
 #' rank_results <- get_ranks_from_counts(counts)
 #'
 #' # Specify custom cap values
@@ -437,8 +438,8 @@ get_ranks_from_counts <- function(counts,
 #' valid_genes <- valid_gene_signature$valid_genes
 #' missing_genes <- valid_gene_signature$missing_genes
 #'
-#' # get sparoroanks
-#' ranks <- get_ranks_from_counts(counts)
+#' # get ranks
+#' ranks <- get_ranks(counts)
 #'
 #'
 #'
@@ -496,7 +497,7 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #' Compute SPAROscores for a gene signature
 #'
 #' Computes SPAROscores for all samples, cells, or spatial locations using
-#' pre-computed SPARO ranks and rank caps. Scores quantify the enrichment of a
+#' pre-computed ranks and rank caps. Scores quantify the enrichment of a
 #' gene signature based on the normalized Spearman footrule distance between
 #' observed signature gene ranks and the corresponding rank cap.
 #'
@@ -505,13 +506,13 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #'
 #'
 #' @param ranks A matrix of gene ranks produced by
-#' get_ranks_from_counts(). Rows correspond to genes and columns
+#' get_ranks(). Rows correspond to genes and columns
 #' correspond to samples, cells, or spatial locations.
 #'
 #'
 #' @param rank_caps Numeric vector containing the rank cap for each column of
 #' ranks. Typically obtained from the rank_caps element returned by
-#' get_ranks_from_counts().
+#' get_ranks().
 #'
 #'
 #' @param signatures Character vector containing the genes that define the
@@ -545,8 +546,8 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #'
 #'
 #' @examples
-#' # Generate SPARO ranks and rank caps
-#' rank_results <- get_ranks_from_counts(counts)
+#' # Generate ranks and rank caps
+#' rank_results <- get_ranks(counts)
 #'
 #' # Compute scores for a gene signature
 #' sparoscores <- compute_sparoscores(
@@ -564,7 +565,7 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #' )
 #'
 #' @seealso
-#' \code{\link{get_ranks_from_counts}},
+#' \code{\link{get_ranks}},
 #' \code{\link{compute_sparoscore_per_cell}},
 #' \code{\link{validate_signature}}
 #'
@@ -616,47 +617,57 @@ compute_sparoscores <- function(ranks,
 
 
 
-
-#' Add SPAROscores to a Seurat object
+#' Compute SPAROscores from a matrix-like object
 #'
-#' Computes SPAROscores for a gene signature and stores the resulting scores in
-#' the metadata of a Seurat object. SPARO ranks can either be calculated from
-#' an expression layer or retrieved from previously stored SPARO ranks.
+#' Compute SPAROscores for one or more gene signatures from a matrix-like
+#' object containing either expression values or pre-computed ranks.
 #'
-#' Optionally, the computed SPARO ranks can be stored as an assay layer for
-#' reuse in subsequent analyses.
+#' This function is implemented as an S4 generic and supports multiple
+#' matrix-like input classes, including dense matrices, sparse matrices,
+#' delayed matrices, and data frames.
 #'
-#' @param seurat_object A Seurat object containing expression data.
 #'
-#' @param signatures Character vector containing the genes that define the
-#' signature to score. Gene identifiers must match the feature names in the
-#' selected assay.
+#' @param matrix_object A matrix-like object with genes in rows and samples,
+#' cells, or spatial locations in columns. The object should contain either
+#' expression values or pre-computed ranks, depending on the value of
+#' data_has_ranks.
 #'
-#' @param assay Character string specifying the assay from which expression
-#' data should be extracted. Defaults to "RNA".
 #'
-#' @param layer Character string specifying the assay layer containing
-#' expression counts. Defaults to "counts".
+#' @param signatures Gene signature(s) to score.
 #'
-#' @param is_assay_ranks Logical indicating whether previously
-#' calculated SPARO ranks stored in the assay layer "ranks" should be
-#' used instead of recalculating ranks from expression data.
+#' Supported inputs include:
+#' \itemize{
+#' \item A character vector representing a single gene signature.
+#' \item A named list of character vectors representing multiple gene
+#' signatures.
+#' \item A GeneSet object.
+#' \item A GeneSetCollection object.
+#' }
 #'
-#' @param store_ranks Logical indicating whether newly computed SPARO
-#' ranks should be stored in the selected assay under the layer name
-#' "ranks".
+#' Gene identifiers must match the row names of matrix_object.
 #'
-#' @param count_caps Optional numeric vector of expression values used to
-#' derive rank caps during SPARO rank calculation. If NULL, geometric mean
-#' expression values are computed using compute_geometric_average().
+#'
+#' @param data_has_ranks Logical indicating whether matrix_object contains
+#' pre-computed ranks. If TRUE, SPAROscores are computed directly from the
+#' supplied ranks. If FALSE (default), ranks are first computed from the
+#' supplied expression values.
+#'
+#'
+#' @param count_caps Optional numeric vector of expression thresholds used to
+#' determine rank caps during rank calculation. Only used when
+#' data_has_ranks = FALSE. If NULL (default), values are computed using
+#' compute_geometric_average().
+#'
 #'
 #' @param rank_caps Optional numeric vector of rank cap values used during
-#' SPAROscore calculation. If NULL, rank caps returned by
-#' get_ranks_from_counts() are used.
+#' SPAROscore calculation. If NULL (default), rank caps returned by get_ranks()
+#' are used. When data_has_ranks = TRUE, this argument must be supplied.
+#'
 #'
 #' @param handle_ties Character string specifying how tied expression values
-#' are ranked. Passed to get_ranks_from_counts(). Supported values are
+#' are ranked. Passed to get_ranks(). Supported values are
 #' "min", "max", "average", and "random".
+#'
 #'
 #' @param handle_missing_genes Character string specifying how signature genes
 #' absent from the dataset should be handled:
@@ -666,82 +677,247 @@ compute_sparoscores <- function(ranks,
 #' rank value.
 #' }
 #'
-#' @return The input Seurat object with:
+#' @returns A numeric matrix of SPAROscores with one row per column of
+#' matrix_object.
+#'
 #' \itemize{
-#' \item A metadata column containing SPAROscores for the supplied gene
-#' signature.
-#' \item A metadata column named "SPARO_rank_caps" containing the rank cap
-#' for each cell.
-#' \item Optionally, a "ranks" layer in the selected assay if
-#' store_ranks = TRUE.
+#' \item For a single signature, the returned matrix contains one column
+#' named "SPAROscore".
+#' \item For multiple signatures, columns correspond to signatures and rows
+#' correspond to samples, cells, or spatial locations.
+#' }
+#'
+#'
+#' @details
+#' When data_has_ranks = FALSE, feature ranks are computed using
+#' get_ranks() before SPAROscores are calculated. When
+#' data_has_ranks = TRUE, the supplied ranks are used directly.
+#'
+#' SPAROscores are computed using get_scores().
+#'
+#' @examples
+#' # Compute scores directly from expression data
+#' scores <- augment_sparoscores_matrix(
+#' matrix_object = counts,
+#' signatures = c("CCR7", "IL7R", "LTB")
+#' )
+#'
+#' # Compute scores from pre-computed ranks
+#' scores <- augment_sparoscores_matrix(
+#' matrix_object = ranks,
+#' signatures = c("CCR7", "IL7R", "LTB"),
+#' data_has_ranks = TRUE,
+#' rank_caps = rank_caps
+#' )
+#'
+#' @seealso
+#' \code{\link{get_ranks}},
+#' \code{\link{get_scores}},
+#' \code{\link{compute_geometric_average}}
+#'
+#'
+augment_sparoscores_matrix <- function(matrix_object,
+                                       signatures,
+                                       data_has_ranks = FALSE,
+                                       count_caps = NULL,
+                                       rank_caps = NULL,
+                                       handle_ties = "min",
+                                       handle_missing_genes = "skip"){
+    if(!is.logical(data_has_ranks)){
+        stop("SPAROscore says: data_has_ranks should be a boolean")
+    }
+
+    # if ranks are provided, directly calculate scores
+    if(data_has_ranks){
+        if(is.null(rank_caps)){
+            stop("SPAROscore says: rank_caps needed when data_has_ranks = TRUE")
+        }
+
+        sparoscores <- get_scores(ranks = matrix_object,
+                                  rank_caps = rank_caps,
+                                  signatures = signatures,
+                                  handle_missing_genes = handle_missing_genes)
+    }
+    # if counts are provides, calculate ranks, rank_caps and then score
+    else{
+        # if user provides count_caps, then use it, if not, calculate default
+        if(is.null(count_caps)){
+            count_caps <- compute_geometric_average(matrix_object)
+        }
+        else{
+            count_caps <- count_caps
+        }
+
+        # compute ranks and rank_caps
+        ranks_output <- get_ranks(counts = matrix_object,
+                                      count_caps = count_caps,
+                                      handle_ties = handle_ties)
+
+        #if user gives rank_caps, use them. If not, use default
+        if(is.null(rank_caps)){
+            rank_caps <- ranks_output$rank_caps
+        }
+        else{
+            count_caps <- count_caps
+        }
+
+        sparoscores <- get_scores(ranks = ranks_output$ranks,
+                                  rank_caps = rank_caps,
+                                  signatures = signatures,
+                                  handle_missing_genes = handle_missing_genes)
+    }
+
+    return(sparoscores)
+}
+
+
+
+
+#' Add SPAROscores to a Seurat object
+#'
+#' Computes SPAROscores for one or more gene signature and stores the resulting
+#' scores in the metadata of a Seurat object.
+#' Ranks can either be calculated from
+#' an expression layer or retrieved from previously stored ranks.
+#'
+#'
+#' @param seurat_object A Seurat object containing expression/rank data.
+#'
+#'
+#' @param signatures Gene signature(s) to score.
+#'
+#' Supported inputs include:
+#' \itemize{
+#' \item A character vector representing a single gene signature.
+#' \item A named list of character vectors representing multiple gene
+#' signatures.
+#' \item A GeneSet object.
+#' \item A GeneSetCollection object.
+#' }
+#'
+#'#' Gene identifiers must use the same naming convention as the row names of
+#' ranks.
+#'
+#'
+#'#' @param data_has_ranks Logical indicating whether previously
+#' calculated ranks are stored in the assay/layer.
+#' If TRUE, ranks are read directly from the assay layer.
+#' If FALSE (default), ranks are computed from counts data in the assay layer.
+#'
+#'
+#' @param assay Character string specifying the name of
+#' the assay containing the data to use.
+#' When data_has_ranks = FALSE, this assay should contain expression counts.
+#' When data_has_ranks = TRUE, it should contain pre-computed ranks.
+#' Defaults to "RNA"
+#'
+#'
+#' @param layer Character string specifying the name
+#' of the assay layer containing the data to use.
+#' When data_has_ranks = FALSE, this layer should contain expression counts.
+#' When data_has_ranks = TRUE, it should contain pre-computed ranks.
+#' Defaults to "count"
+#'
+#'
+#' @param count_caps Optional numeric vector of expression values used to
+#' derive rank caps during rank calculation. If NULL, geometric mean
+#' expression values are computed using compute_geometric_average().
+#'
+#'
+#' @param rank_caps Optional numeric vector of rank cap values used during
+#' SPAROscore calculation. If NULL, rank caps returned by
+#' get_ranks() are used.
+#'
+#'
+#' @param handle_ties Character string specifying how tied expression values
+#' are ranked. Passed to get_ranks(). Supported values are
+#' "min", "max", "average", and "random".
+#'
+#'
+#' @param handle_missing_genes Character string specifying how signature genes
+#' absent from the dataset should be handled:
+#' \itemize{
+#' \item "skip" (default): exclude missing genes from score calculation.
+#' \item "impute": include missing genes by assigning them the capped
+#' rank value.
+#' }
+#'
+#' @return A Seurat object with:
+#' \itemize{
+#' \item One or more metadata columns containing SPAROscores for the supplied
+#' signature(s).
+#' \item A metadata column named "rank_caps" containing the rank cap for
+#' each cell.
+#' \item A "ranks" layer added to the selected assay when ranks are
+#' calculated from expression data.
 #' }
 #'
 #' @details
-#' If is_assay_ranks = FALSE, SPARO ranks are computed from the
-#' selected assay layer before score calculation.
+#' When data_has_ranks = FALSE, the function:
+#' \enumerate{
+#' \item Retrieves expression data from the specified assay and layer.
+#' \item Computes feature ranks using get_ranks().
+#' \item Calculates SPAROscores using get_scores().
+#' \item Stores the computed ranks in a new assay layer named "ranks".
+#' }
 #'
-#' If is_assay_ranks = TRUE, the function expects a layer named
-#' "ranks" to already exist in the selected assay. Stored rank caps are
-#' retrieved from the metadata column "SPARO_rank_caps" unless explicitly
-#' provided through rank_caps.
+#' When data_has_ranks = TRUE, the function:
+#' \enumerate{
+#' \item Retrieves pre-computed ranks from the specified assay and layer.
+#' \item Uses the supplied rank_caps or retrieves them from the
+#' "rank_caps" metadata column.
+#' \item Calculates SPAROscores using get_scores().
+#' }
 #'
-#' Computed SPAROscores are appended to the Seurat object's metadata and can be
-#' accessed through seurat_object[[]].
+#' Computed scores and rank caps are appended to the Seurat object's metadata
+#' and can be accessed with seurat_object[[]].
 #'
 #' @examples
-#' # Compute SPAROscores directly from RNA counts
+#' # Compute SPAROscores from RNA counts
 #' seurat_object <- augment_sparoscores_seurat(
 #' seurat_object = seurat_object,
 #' signatures = c("CCR7", "IL7R", "LTB")
 #' )
 #'
-#' # Store SPARO ranks for later reuse
+#' # Compute scores using pre-computed ranks stored in a ranks layer
 #' seurat_object <- augment_sparoscores_seurat(
 #' seurat_object = seurat_object,
 #' signatures = c("CCR7", "IL7R", "LTB"),
-#' store_ranks = TRUE
-#' )
-#'
-#' # Reuse previously stored SPARO ranks
-#' seurat_object <- augment_sparoscores_seurat(
-#' seurat_object = seurat_object,
-#' signatures = c("CCR7", "IL7R", "LTB"),
-#' is_assay_ranks = TRUE
+#' data_has_ranks = TRUE,
+#' layer = "ranks"
 #' )
 #'
 #' @seealso
-#' \code{\link{get_ranks_from_counts}},
-#' \code{\link{compute_sparoscores}}
+#' \code{\link{get_ranks}},
+#' \code{\link{get_scores}},
+#' \code{\link{compute_geometric_average}}
+#'
+#'
 augment_sparoscores_seurat <- function(seurat_object,
                                        signatures,
+                                       data_has_ranks = FALSE,
                                        assay = "RNA",
                                        layer = "count",
-                                       is_assay_ranks = FALSE,
-                                       store_ranks = FALSE,
                                        count_caps = NULL,
                                        rank_caps = NULL,
                                        handle_ties = "min",
                                        handle_missing_genes = "skip"){
 
 
-    if(!is.logical(is_assay_ranks)){
-        stop("SPAROscore says: is_assay_ranks should be a boolean")
-    }
-
-    if(!is.logical(store_ranks)){
-        stop("SPAROscore says: store_ranks should be a boolean")
+    if(!is.logical(data_has_ranks)){
+        stop("SPAROscore says: data_has_ranks should be a boolean")
     }
 
     # if user ask to use pre-calculated ranks
-    if(is_assay_ranks){
+    if(data_has_ranks){
         # extract precalculated ranks and rank_caps
         ranks <- Seurat::GetAssayData(seurat_object,
                                    assay = assay,
-                                   layer = "ranks")
+                                   layer = layer)
 
         # set rank_caps to pre-calculated values unless provided by the user
         if(is.null(rank_caps)){
-            rank_caps <- as.numeric(unlist(seurat_object[["SPARO_rank_caps"]]))
+            rank_caps <- as.numeric(unlist(seurat_object[["rank_caps"]]))
             names(rank_caps) <- rownames(seurat_object[[]])
         }
         else{
@@ -770,10 +946,10 @@ augment_sparoscores_seurat <- function(seurat_object,
         }
 
 
-        # get outputs for sparoranking function
+        # get outputs for ranking function
         get_ranks_output <- get_ranks(counts = counts,
-                                                count_caps = count_caps,
-                                                handle_ties = handle_ties)
+                                      count_caps = count_caps,
+                                      handle_ties = handle_ties)
 
         # set ranks for future input
         ranks <- get_ranks_output$ranks
@@ -793,12 +969,8 @@ augment_sparoscores_seurat <- function(seurat_object,
                                        signatures =  signatures,
                                        handle_missing_genes =
                                            handle_missing_genes)
-    }
 
-
-
-    # store the ranks in ranks layer of the assay if user asks
-    if(store_ranks){
+        # store the ranks in new layer named ranks
         seurat_object <- Seurat::SetAssayData(object = seurat_object,
                                               assay = assay,
                                               layer = "ranks",
@@ -806,11 +978,12 @@ augment_sparoscores_seurat <- function(seurat_object,
     }
 
 
-    # append the rank_caps and sparoscores to metadata
-    sparoscores_df <- as.data.frame(sparoscores,
-                                    row.names = rownames(sparoscores))
 
-    sparoscores_df$SPARO_rank_caps <- rank_caps
+    # append the rank_caps and sparoscores to metadata
+    sparoscores_df <- data.frame(rank_caps)
+    colnames(sparoscores_df) <- "rank_caps"
+
+    sparoscores_df <- cbind(sparoscores_df, sparoscores)
 
     seurat_object <- Seurat::AddMetaData(object = seurat_object,
                                          metadata = sparoscores_df)
@@ -819,119 +992,140 @@ augment_sparoscores_seurat <- function(seurat_object,
 }
 
 
-#' Add SPAROscores to a SummarizedExperiment, SingleCellExperiment,
-#' SpatialExperiment or RangedSummarizedExperiment object
+#' Add SPAROscores to a SummarizedExperiment-derived object
 #'
-#' Computes SPAROscores for a gene signature and stores the resulting scores
-#' in the `colData` of a SummarizedExperiment, SingleCellExperiment,
-#' SpatialExperiment or RangedSummarizedExperiment object
+#' Compute SPAROscores for a gene signature and store the resulting scores in
+#' the colData of a SummarizedExperiment, SingleCellExperiment,
+#' SpatialExperiment, or RangedSummarizedExperiment object.
 #'
-#' SPARO ranks can either be computed from an expression assay or retrieved
-#' from previously stored assay data.
+#' Depending on data_has_ranks, the function either computes feature ranks
+#' from an expression assay or uses pre-computed ranks stored in an assay.
+#' Rank caps are calculated automatically when not supplied.
 #'
-#' Optionally, computed SPARO ranks can be stored in the assay for reuse.
+#' @param sce_object A SummarizedExperiment-derived object containing
+#' expression data or pre-computed ranks.
 #'
-#' @param sce_object A SummarizedExperiment, SingleCellExperiment,
-#' SpatialExperiment or RangedSummarizedExperiment object
+#' @param signatures Gene signature(s) to score.
 #'
-#'
-#' @param signatures Character vector of genes defining the signature.
-#' Gene identifiers must match `rownames()` of the selected assay.
-#'
-#'
-#' @param assay Character string specifying the assay to use. Defaults to "RNA".
-#'
-#'
-#' @param is_assay_ranks Logical indicating whether previously stored
-#' ranks in an assay named `"ranks"` should be used.
-#'
-#'
-#' @param store_ranks Logical indicating whether to store computed
-#' ranks in the assay `"ranks"`.
-#'
-#'
-#' @param count_caps Optional numeric vector of expression values used to
-#' derive rank caps during SPARO rank calculation. If NULL, geometric mean
-#' expression values are computed using compute_geometric_average().
-#'
-#'
-#' @param rank_caps Optional numeric vector of rank cap values used during
-#' SPAROscore calculation. If NULL, rank caps returned by
-#' get_ranks_from_counts() are used.
-#'
-#'
-#' @param handle_ties Character string specifying how tied expression values
-#' are ranked. Passed to get_ranks_from_counts(). Supported values are
-#' "min", "max", "average", and "random".
-#'
-#'
-#' @param handle_missing_genes Character string specifying how signature genes
-#' absent from the dataset should be handled:
+#' Supported inputs include:
 #' \itemize{
-#' \item "skip" (default): exclude missing genes from score calculation.
-#' \item "impute": include missing genes by assigning them the capped
-#' rank value.
+#' \item A character vector representing a single gene signature.
+#' \item A named list of character vectors representing multiple gene
+#' signatures.
+#' \item A GeneSet object.
+#' \item A GeneSetCollection object.
 #' }
 #'
+#' Gene identifiers must use the same naming convention as the row names of
+#' ranks.
+#'
+#' @param data_has_ranks Logical indicating whether the specified assay already
+#' contains feature ranks. If TRUE, ranks are read directly from the assay.
+#' If FALSE (default), ranks are computed from expression data.
+#'
+#' @param assay Name of the assay containing the data to use. When
+#' data_has_ranks = FALSE, this assay should contain expression counts.
+#' When data_has_ranks = TRUE, it should contain pre-computed ranks.
+#' Defaults to "counts".
+#'
+#' @param count_caps Optional numeric vector of expression thresholds used to
+#' determine rank caps during rank calculation. If NULL, values are computed
+#' using compute_geometric_average().
+#'
+#' @param rank_caps Optional numeric vector of rank cap values used during
+#' SPAROscore calculation. If NULL, rank caps are obtained from
+#' get_ranks() or retrieved from the "rank_caps" column of colData
+#' when data_has_ranks = TRUE.
+#'
+#' @param handle_ties Method used to rank tied expression values. Passed to
+#' get_ranks(). Supported values are "min", "max", "average",
+#' and "random".
+#'
+#' @param handle_missing_genes Strategy for handling signature genes that are
+#' absent from the dataset:
+#' \itemize{
+#' \item "skip" (default): exclude missing genes from score calculation.
+#' \item "impute": assign missing genes the capped rank value and include
+#' them in score calculation.
+#' }
 #'
 #' @return The input object with:
 #' \itemize{
-#'   \item SPAROscores added to `colData(sce_object)`
-#'   \item A column `"SPARO_rank_caps"` in `colData`
-#'   \item Optionally, a `"ranks"` assay if `store_ranks = TRUE`
+#' \item One or more SPAROscore columns added to colData().
+#' \item A "rank_caps" column added to colData().
+#' \item A "ranks" assay added when ranks are computed from expression data.
 #' }
 #'
-#'
 #' @details
-#' If `is_assay_ranks = FALSE`, ranks are computed from the selected
-#' assay. Otherwise, stored `"ranks"` assay values are used.
+#' When data_has_ranks = FALSE, the function:
+#' \enumerate{
+#' \item Retrieves expression values from the specified assay.
+#' \item Computes feature ranks using get_ranks().
+#' \item Calculates SPAROscores using get_scores().
+#' \item Stores the computed ranks in a new assay named "ranks".
+#' }
 #'
-#' SPAROscores are computed using the normalized Spearman footrule distance
-#' between signature gene ranks and rank caps.
+#' When data_has_ranks = TRUE, the function:
+#' \enumerate{
+#' \item Retrieves pre-computed ranks from the specified assay.
+#' \item Uses the supplied rank_caps or retrieves them from the
+#' "rank_caps" column of colData().
+#' \item Calculates SPAROscores using get_scores().
+#' }
 #'
+#' Computed scores and rank caps are appended to colData() and can be
+#' accessed using SummarizedExperiment::colData().
 #'
 #' @examples
 #' library(SingleCellExperiment)
 #'
 #' sce <- augment_sparoscores_sce(
-#'   sce_object = sce,
-#'   signatures = c("CCR7", "IL7R", "LTB")
+#' sce_object = sce,
+#' signatures = c("CCR7", "IL7R", "LTB")
+#' )
+#'
+#' # Reuse previously computed ranks
+#' sce <- augment_sparoscores_sce(
+#' sce_object = sce,
+#' signatures = c("CCR7", "IL7R", "LTB"),
+#' data_has_ranks = TRUE,
+#' assay = "ranks"
 #' )
 #'
 #' @seealso
-#' \code{\link{get_ranks_from_counts}},
+#' \code{\link{get_ranks}},
 #' \code{\link{get_scores}},
 #' \code{\link{compute_geometric_average}}
 #'
 #'
 augment_sparoscores_sce <- function(sce_object,
-                            signatures,
-                            assay = "RNA",
-                            is_assay_ranks = FALSE,
-                            store_ranks = FALSE,
-                            count_caps = NULL,
-                            rank_caps = NULL,
-                            handle_ties = "min",
-                            handle_missing_genes = "skip"){
+                                       signatures,
+                                       data_has_ranks = FALSE,
+                                       assay = "counts",
+                                       count_caps = NULL,
+                                       rank_caps = NULL,
+                                       handle_ties = "min",
+                                       handle_missing_genes = "skip"){
 
-    if(!is.logical(is_assay_ranks)){
-        stop("SPAROscore says: is_assay_ranks should be a boolean")
-    }
 
-    if(!is.logical(store_ranks)){
-        stop("SPAROscore says: store_ranks should be a boolean")
+    if(!is.logical(data_has_ranks)){
+        stop("SPAROscore says: data_has_ranks should be a boolean")
     }
 
     # if user ask to use pre-calculated ranks
-    if(is_assay_ranks){
+    if(data_has_ranks){
         # extract precalculated ranks and rank_caps
-        ranks <- SummarizedExperiment::assay(sce_object,
-                                           assay = "ranks")
+        ranks <- SummarizedExperiment::assay(sce_object, assay)
 
         # set rank_caps to pre-calculated values unless provided by the user
         if(is.null(rank_caps)){
-            rank_caps <- as.numeric(unlist(colData(sce_object)[["SPARO_rank_caps"]]))
-            names(rank_caps) <- rownames(colData(sce_object))
+            rank_caps <- as.numeric(
+                                    unlist(
+                                        SummarizedExperiment::colData(
+                                            sce_object)[["rank_caps"]]))
+
+            names(rank_caps) <- rownames(
+                SummarizedExperiment::colData(sce_object))
         }
         else{
             rank_caps <- rank_caps
@@ -939,15 +1133,14 @@ augment_sparoscores_sce <- function(sce_object,
 
 
         sparoscores <- get_scores(ranks =  ranks,
-                                       rank_caps = rank_caps,
-                                       signatures =  signatures,
-                                       handle_missing_genes =
-                                           handle_missing_genes)
+                                  rank_caps = rank_caps,
+                                  signatures =  signatures,
+                                  handle_missing_genes =
+                                      handle_missing_genes)
     }
     else{
         #extract count matrix from data
-        counts <- SummarizedExperiment::assay(sce_object,
-                                                   assay = assay)
+        counts <- SummarizedExperiment::assay(sce_object, assay)
 
         # set count caps to geometric averages unless provided by the user
         if(is.null(count_caps)){
@@ -958,10 +1151,10 @@ augment_sparoscores_sce <- function(sce_object,
         }
 
 
-        # get outputs for sparoranking function
+        # get outputs for ranking function
         get_ranks_output <- get_ranks(counts = counts,
-                                                count_caps = count_caps,
-                                                handle_ties = handle_ties)
+                                      count_caps = count_caps,
+                                      handle_ties = handle_ties)
 
         # set ranks for future input
         ranks <- get_ranks_output$ranks
@@ -977,31 +1170,28 @@ augment_sparoscores_sce <- function(sce_object,
 
 
         sparoscores <- get_scores(ranks =  ranks,
-                                       rank_caps = rank_caps,
-                                       signatures =  signatures,
-                                       handle_missing_genes =
-                                           handle_missing_genes)
+                                  rank_caps = rank_caps,
+                                  signatures =  signatures,
+                                  handle_missing_genes =
+                                      handle_missing_genes)
+
+        # store the ranks in new assay named ranks
+        SummarizedExperiment::assay(sce_object, "ranks") <- ranks
     }
 
-
-
-    # store the ranks in ranks layer of the assay if user asks
-    if(store_ranks){
-        SummarizedExperiment::assay(
-            sce_object, "ranks") <- ranks
-    }
 
 
     # append the rank_caps and sparoscores to metadata
-    sparoscores_df <- as.data.frame(sparoscores,
-                                    row.names = rownames(sparoscores))
+    sparoscores_df <- data.frame(rank_caps)
+    colnames(sparoscores_df) <- "rank_caps"
 
-    sparoscores_df$SPARO_rank_caps <- rank_caps
+    sparoscores_df <- cbind(sparoscores_df, sparoscores)
 
-    colData(sce_object) <- cbind(colData(sce_object), sparoscores_df)
+    SummarizedExperiment::colData(sce_object) <- cbind(
+        SummarizedExperiment::colData(sce_object), sparoscores_df
+    )
 
     return(sce_object)
 }
-
 
 

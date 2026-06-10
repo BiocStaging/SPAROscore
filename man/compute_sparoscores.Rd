@@ -13,12 +13,12 @@ compute_sparoscores(
 }
 \arguments{
 \item{ranks}{A matrix of gene ranks produced by
-get_ranks_from_counts(). Rows correspond to genes and columns
+get_ranks(). Rows correspond to genes and columns
 correspond to samples, cells, or spatial locations.}
 
 \item{rank_caps}{Numeric vector containing the rank cap for each column of
 ranks. Typically obtained from the rank_caps element returned by
-get_ranks_from_counts().}
+get_ranks().}
 
 \item{signatures}{Character vector containing the genes that define the
 signature of interest. Gene identifiers must match the row names of
@@ -39,7 +39,7 @@ ranks.
 }
 \description{
 Computes SPAROscores for all samples, cells, or spatial locations using
-pre-computed SPARO ranks and rank caps. Scores quantify the enrichment of a
+pre-computed ranks and rank caps. Scores quantify the enrichment of a
 gene signature based on the normalized Spearman footrule distance between
 observed signature gene ranks and the corresponding rank cap.
 }
@@ -58,8 +58,8 @@ footrule distance score. Higher scores indicate that signature genes tend to
 occupy higher expression ranks relative to the column-specific rank cap.
 }
 \examples{
-# Generate SPARO ranks and rank caps
-rank_results <- get_ranks_from_counts(counts)
+# Generate ranks and rank caps
+rank_results <- get_ranks(counts)
 
 # Compute scores for a gene signature
 sparoscores <- compute_sparoscores(
@@ -78,7 +78,7 @@ handle_missing_genes = "impute"
 
 }
 \seealso{
-\code{\link{get_ranks_from_counts}},
+\code{\link{get_ranks}},
 \code{\link{compute_sparoscore_per_cell}},
 \code{\link{validate_signature}}
 }
