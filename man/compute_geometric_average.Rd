@@ -4,10 +4,10 @@
 \alias{compute_geometric_average}
 \title{Compute column-wise geometric mean expression values}
 \usage{
-compute_geometric_average(counts_data)
+compute_geometric_average(counts)
 }
 \arguments{
-\item{counts_data}{A matrix-like object containing expression counts, with
+\item{counts}{A matrix-like object containing expression counts, with
 genes in rows and samples, cells, or spatial locations in columns.
 Supported inputs include base matrices, sparse matrices
 (Matrix::sparseMatrix), and delayed matrices
@@ -16,7 +16,7 @@ Supported inputs include base matrices, sparse matrices
 \value{
 A numeric vector containing the column-wise geometric mean
 expression values. The length of the vector equals the number of columns
-in counts_data.
+in counts.
 }
 \description{
 Computes the geometric mean expression for each sample, cell, or spatial

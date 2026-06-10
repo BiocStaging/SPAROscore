@@ -2,15 +2,13 @@
 % Please edit documentation in R/helper_functions.R
 \name{augment_sparoscores_sce}
 \alias{augment_sparoscores_sce}
-\title{Add SPAROscores to a SummarizedExperiment, SingleCellExperiment,
-SpatialExperiment or RangedSummarizedExperiment object}
+\title{Add SPAROscores to a SummarizedExperiment-derived object}
 \usage{
 augment_sparoscores_sce(
   sce_object,
-  signature_genes,
-  assay = "RNA",
-  use_existing_sparoranks = FALSE,
-  store_sparoranks = FALSE,
+  signatures,
+  data_has_ranks = FALSE,
+  assay = "counts",
   count_caps = NULL,
   rank_caps = NULL,
   handle_ties = "min",
@@ -18,77 +16,110 @@ augment_sparoscores_sce(
 )
 }
 \arguments{
-\item{sce_object}{A SummarizedExperiment, SingleCellExperiment,
-SpatialExperiment or RangedSummarizedExperiment object}
+\item{sce_object}{A SummarizedExperiment-derived object containing
+expression data or pre-computed ranks.}
 
-\item{signature_genes}{Character vector of genes defining the signature.
-Gene identifiers must match `rownames()` of the selected assay.}
+\item{signatures}{Gene signature(s) to score.
 
-\item{assay}{Character string specifying the assay to use. Defaults to "RNA".}
+Supported inputs include:
+\itemize{
+\item A character vector representing a single gene signature.
+\item A named list of character vectors representing multiple gene
+signatures.
+\item A GeneSet object.
+\item A GeneSetCollection object.
+}
 
-\item{use_existing_sparoranks}{Logical indicating whether previously stored
-SPAROranks in an assay named `"sparoranks"` should be used.}
+Gene identifiers must use the same naming convention as the row names of
+ranks.}
 
-\item{store_sparoranks}{Logical indicating whether to store computed
-SPAROranks in the assay `"sparoranks"`.}
+\item{data_has_ranks}{Logical indicating whether the specified assay already
+contains feature ranks. If TRUE, ranks are read directly from the assay.
+If FALSE (default), ranks are computed from expression data.}
 
-\item{count_caps}{Optional numeric vector of expression values used to
-derive rank caps during SPARO rank calculation. If NULL, geometric mean
-expression values are computed using compute_geometric_average().}
+\item{assay}{Name of the assay containing the data to use. When
+data_has_ranks = FALSE, this assay should contain expression counts.
+When data_has_ranks = TRUE, it should contain pre-computed ranks.
+Defaults to "counts".}
+
+\item{count_caps}{Optional numeric vector of expression thresholds used to
+determine rank caps during rank calculation. If NULL, values are computed
+using compute_geometric_average().}
 
 \item{rank_caps}{Optional numeric vector of rank cap values used during
-SPAROscore calculation. If NULL, rank caps returned by
-get_sparoranks_from_counts() are used.}
+SPAROscore calculation. If NULL, rank caps are obtained from
+get_ranks() or retrieved from the "rank_caps" column of colData
+when data_has_ranks = TRUE.}
 
-\item{handle_ties}{Character string specifying how tied expression values
-are ranked. Passed to get_sparoranks_from_counts(). Supported values are
-"min", "max", "average", and "random".}
+\item{handle_ties}{Method used to rank tied expression values. Passed to
+get_ranks(). Supported values are "min", "max", "average",
+and "random".}
 
-\item{handle_missing_genes}{Character string specifying how signature genes
-absent from the dataset should be handled:
+\item{handle_missing_genes}{Strategy for handling signature genes that are
+absent from the dataset:
 \itemize{
 \item "skip" (default): exclude missing genes from score calculation.
-\item "impute": include missing genes by assigning them the capped
-rank value.
+\item "impute": assign missing genes the capped rank value and include
+them in score calculation.
 }}
 }
 \value{
 The input object with:
 \itemize{
-  \item SPAROscores added to `colData(sce_object)`
-  \item A column `"SPARO_rank_caps"` in `colData`
-  \item Optionally, a `"sparoranks"` assay if `store_sparoranks = TRUE`
+\item One or more SPAROscore columns added to colData().
+\item A "rank_caps" column added to colData().
+\item A "ranks" assay added when ranks are computed from expression data.
 }
 }
 \description{
-Computes SPAROscores for a gene signature and stores the resulting scores
-in the `colData` of a SummarizedExperiment, SingleCellExperiment,
-SpatialExperiment or RangedSummarizedExperiment object
+Compute SPAROscores for a gene signature and store the resulting scores in
+the colData of a SummarizedExperiment, SingleCellExperiment,
+SpatialExperiment, or RangedSummarizedExperiment object.
 }
 \details{
-SPARO ranks can either be computed from an expression assay or retrieved
-from previously stored assay data.
+Depending on data_has_ranks, the function either computes feature ranks
+from an expression assay or uses pre-computed ranks stored in an assay.
+Rank caps are calculated automatically when not supplied.
 
-Optionally, computed SPARO ranks can be stored in the assay for reuse.
 
+When data_has_ranks = FALSE, the function:
+\enumerate{
+\item Retrieves expression values from the specified assay.
+\item Computes feature ranks using get_ranks().
+\item Calculates SPAROscores using get_scores().
+\item Stores the computed ranks in a new assay named "ranks".
+}
 
-If `use_existing_sparoranks = FALSE`, ranks are computed from the selected
-assay. Otherwise, stored `"sparoranks"` assay values are used.
+When data_has_ranks = TRUE, the function:
+\enumerate{
+\item Retrieves pre-computed ranks from the specified assay.
+\item Uses the supplied rank_caps or retrieves them from the
+"rank_caps" column of colData().
+\item Calculates SPAROscores using get_scores().
+}
 
-SPAROscores are computed using the normalized Spearman footrule distance
-between signature gene ranks and rank caps.
+Computed scores and rank caps are appended to colData() and can be
+accessed using SummarizedExperiment::colData().
 }
 \examples{
 library(SingleCellExperiment)
 
 sce <- augment_sparoscores_sce(
-  sce_object = sce,
-  signature_genes = c("CCR7", "IL7R", "LTB")
+sce_object = sce,
+signatures = c("CCR7", "IL7R", "LTB")
+)
+
+# Reuse previously computed ranks
+sce <- augment_sparoscores_sce(
+sce_object = sce,
+signatures = c("CCR7", "IL7R", "LTB"),
+data_has_ranks = TRUE,
+assay = "ranks"
 )
 
 }
 \seealso{
-\code{\link{get_sparoranks_from_counts}},
-\code{\link{get_sparoscores}},
+\code{\link{get_ranks}},
+\code{\link{get_scores}},
 \code{\link{compute_geometric_average}}
 }
