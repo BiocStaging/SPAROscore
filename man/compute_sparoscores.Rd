@@ -5,27 +5,27 @@
 \title{Compute SPAROscores for a gene signature}
 \usage{
 compute_sparoscores(
-  sparoranks,
+  ranks,
   rank_caps,
-  signature_genes,
+  signatures,
   handle_missing_genes = "skip"
 )
 }
 \arguments{
-\item{sparoranks}{A matrix of gene ranks produced by
-get_sparoranks_from_counts(). Rows correspond to genes and columns
+\item{ranks}{A matrix of gene ranks produced by
+get_ranks_from_counts(). Rows correspond to genes and columns
 correspond to samples, cells, or spatial locations.}
 
 \item{rank_caps}{Numeric vector containing the rank cap for each column of
-sparoranks. Typically obtained from the rank_caps element returned by
-get_sparoranks_from_counts().}
+ranks. Typically obtained from the rank_caps element returned by
+get_ranks_from_counts().}
 
-\item{signature_genes}{Character vector containing the genes that define the
+\item{signatures}{Character vector containing the genes that define the
 signature of interest. Gene identifiers must match the row names of
-sparoranks.}
+ranks.}
 
 \item{handle_missing_genes}{Character string specifying how signature genes
-absent from sparoranks should be handled:
+absent from ranks should be handled:
 \itemize{
 \item "skip" (default): exclude missing genes from score
 calculation.
@@ -35,7 +35,7 @@ them in the score calculation.
 }
 \value{
 A named numeric vector of SPAROscores, with one score per column of
-sparoranks.
+ranks.
 }
 \description{
 Computes SPAROscores for all samples, cells, or spatial locations using
@@ -49,7 +49,7 @@ excluded from the calculation or imputed using the capped rank value.
 
 
 The supplied signature is first validated against the genes present in
-sparoranks. Missing genes are reported and handled according to
+ranks. Missing genes are reported and handled according to
 handle_missing_genes.
 
 For each column, gene ranks are extracted for the signature genes and passed
@@ -59,26 +59,26 @@ occupy higher expression ranks relative to the column-specific rank cap.
 }
 \examples{
 # Generate SPARO ranks and rank caps
-rank_results <- get_sparoranks_from_counts(counts_data)
+rank_results <- get_ranks_from_counts(counts)
 
 # Compute scores for a gene signature
 sparoscores <- compute_sparoscores(
-sparoranks = rank_results$sparoranks,
+ranks = rank_results$ranks,
 rank_caps = rank_results$rank_caps,
-signature_genes = c("CCR7", "IL7R", "LTB")
+signatures = c("CCR7", "IL7R", "LTB")
 )
 
 # Include missing signature genes by imputing capped ranks
 sparoscores <- compute_sparoscores(
-sparoranks = rank_results$sparoranks,
+ranks = rank_results$ranks,
 rank_caps = rank_results$rank_caps,
-signature_genes = c("CCR7", "IL7R", "LTB"),
+signatures = c("CCR7", "IL7R", "LTB"),
 handle_missing_genes = "impute"
 )
 
 }
 \seealso{
-\code{\link{get_sparoranks_from_counts}},
+\code{\link{get_ranks_from_counts}},
 \code{\link{compute_sparoscore_per_cell}},
 \code{\link{validate_signature}}
 }

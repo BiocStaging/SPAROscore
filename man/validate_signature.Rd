@@ -46,7 +46,7 @@ validate_signature(
 
 validate_signature(
   signature = gene_signature,
-  all_genes = rownames(sparoranks)
+  all_genes = rownames(ranks)
 )
 
 

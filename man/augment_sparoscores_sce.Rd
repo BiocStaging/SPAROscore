@@ -7,10 +7,10 @@ SpatialExperiment or RangedSummarizedExperiment object}
 \usage{
 augment_sparoscores_sce(
   sce_object,
-  signature_genes,
+  signatures,
   assay = "RNA",
-  use_existing_sparoranks = FALSE,
-  store_sparoranks = FALSE,
+  use_existing_ranks = FALSE,
+  store_ranks = FALSE,
   count_caps = NULL,
   rank_caps = NULL,
   handle_ties = "min",
@@ -21,16 +21,16 @@ augment_sparoscores_sce(
 \item{sce_object}{A SummarizedExperiment, SingleCellExperiment,
 SpatialExperiment or RangedSummarizedExperiment object}
 
-\item{signature_genes}{Character vector of genes defining the signature.
+\item{signatures}{Character vector of genes defining the signature.
 Gene identifiers must match `rownames()` of the selected assay.}
 
 \item{assay}{Character string specifying the assay to use. Defaults to "RNA".}
 
-\item{use_existing_sparoranks}{Logical indicating whether previously stored
-SPAROranks in an assay named `"sparoranks"` should be used.}
+\item{use_existing_ranks}{Logical indicating whether previously stored
+ranks in an assay named `"ranks"` should be used.}
 
-\item{store_sparoranks}{Logical indicating whether to store computed
-SPAROranks in the assay `"sparoranks"`.}
+\item{store_ranks}{Logical indicating whether to store computed
+ranks in the assay `"ranks"`.}
 
 \item{count_caps}{Optional numeric vector of expression values used to
 derive rank caps during SPARO rank calculation. If NULL, geometric mean
@@ -38,10 +38,10 @@ expression values are computed using compute_geometric_average().}
 
 \item{rank_caps}{Optional numeric vector of rank cap values used during
 SPAROscore calculation. If NULL, rank caps returned by
-get_sparoranks_from_counts() are used.}
+get_ranks_from_counts() are used.}
 
 \item{handle_ties}{Character string specifying how tied expression values
-are ranked. Passed to get_sparoranks_from_counts(). Supported values are
+are ranked. Passed to get_ranks_from_counts(). Supported values are
 "min", "max", "average", and "random".}
 
 \item{handle_missing_genes}{Character string specifying how signature genes
@@ -57,7 +57,7 @@ The input object with:
 \itemize{
   \item SPAROscores added to `colData(sce_object)`
   \item A column `"SPARO_rank_caps"` in `colData`
-  \item Optionally, a `"sparoranks"` assay if `store_sparoranks = TRUE`
+  \item Optionally, a `"ranks"` assay if `store_ranks = TRUE`
 }
 }
 \description{
@@ -72,8 +72,8 @@ from previously stored assay data.
 Optionally, computed SPARO ranks can be stored in the assay for reuse.
 
 
-If `use_existing_sparoranks = FALSE`, ranks are computed from the selected
-assay. Otherwise, stored `"sparoranks"` assay values are used.
+If `use_existing_ranks = FALSE`, ranks are computed from the selected
+assay. Otherwise, stored `"ranks"` assay values are used.
 
 SPAROscores are computed using the normalized Spearman footrule distance
 between signature gene ranks and rank caps.
@@ -83,12 +83,12 @@ library(SingleCellExperiment)
 
 sce <- augment_sparoscores_sce(
   sce_object = sce,
-  signature_genes = c("CCR7", "IL7R", "LTB")
+  signatures = c("CCR7", "IL7R", "LTB")
 )
 
 }
 \seealso{
-\code{\link{get_sparoranks_from_counts}},
-\code{\link{get_sparoscores}},
+\code{\link{get_ranks_from_counts}},
+\code{\link{get_scores}},
 \code{\link{compute_geometric_average}}
 }

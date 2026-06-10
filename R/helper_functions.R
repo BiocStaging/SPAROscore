@@ -41,7 +41,7 @@
 #'
 #' validate_signature(
 #'   signature = gene_signature,
-#'   all_genes = rownames(sparoranks)
+#'   all_genes = rownames(ranks)
 #' )
 #'
 #'
@@ -197,7 +197,7 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #' where \eqn{x} represents the expression values in a column.
 #'
 #'
-#' @param counts_data A matrix-like object containing expression counts, with
+#' @param counts A matrix-like object containing expression counts, with
 #' genes in rows and samples, cells, or spatial locations in columns.
 #' Supported inputs include base matrices, sparse matrices
 #' (Matrix::sparseMatrix), and delayed matrices
@@ -206,7 +206,7 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #'
 #' @return A numeric vector containing the column-wise geometric mean
 #' expression values. The length of the vector equals the number of columns
-#' in counts_data.
+#' in counts.
 #'
 #'
 #' @details
@@ -226,15 +226,15 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #' compute_geometric_average(counts)
 #'
 #'
-compute_geometric_average <-function(counts_data){
-    cap_values <- apply(counts_data, 2,
+compute_geometric_average <-function(counts){
+    cap_values <- apply(counts, 2,
                         function(x){exp(mean(log(1+ x),
                                              na.rm = TRUE))})
     return(cap_values)
 }
 
 
-#' Generate SPAROranks from expression count data
+#' Generate ranks from expression count data
 #'
 #' Computes column-wise gene expression ranks from a count matrix and derives
 #' rank caps for each sample, cell, or spatial location. Ranking is performed
@@ -246,7 +246,7 @@ compute_geometric_average <-function(counts_data){
 #' value is returned separately from the gene rank matrix.
 #'
 #'
-#' @param counts_data A matrix-like object containing expression counts, with
+#' @param counts A matrix-like object containing expression counts, with
 #' genes in rows and samples, cells, or spatial locations in columns.
 #' Supported inputs include base matrices, sparse matrices
 #' (Matrix::sparseMatrix), and delayed matrices
@@ -255,7 +255,7 @@ compute_geometric_average <-function(counts_data){
 #'
 #' @param count_caps Optional numeric vector containing the expression values
 #' used as rank caps for each column. The length must equal the number of
-#' columns in counts_data. By default, column-wise geometric mean
+#' columns in counts. By default, column-wise geometric mean
 #' expression values computed by compute_geometric_average() are used.
 #'
 #'
@@ -272,7 +272,7 @@ compute_geometric_average <-function(counts_data){
 #'
 #' @return A named list with two elements:
 #' \describe{
-#' \item{sparoranks}{A matrix of column-wise gene ranks. Lower rank values
+#' \item{ranks}{A matrix of column-wise gene ranks. Lower rank values
 #' correspond to higher expression levels. The matrix is typically of type
 #' integer, except when handle_ties = "average", in which case it is
 #' numeric.}
@@ -297,18 +297,18 @@ compute_geometric_average <-function(counts_data){
 #'
 #' @examples
 #' # Compute SPARO ranks using geometric mean expression as rank caps
-#' rank_results <- get_sparoranks_from_counts(counts_data)
+#' rank_results <- get_ranks_from_counts(counts)
 #'
 #' # Specify custom cap values
-#' rank_results <- get_sparoranks_from_counts(
-#' counts_data,
-#' count_caps = rep(10, ncol(counts_data))
+#' rank_results <- get_ranks_from_counts(
+#' counts,
+#' count_caps = rep(10, ncol(counts))
 #' )
 #'
 #'
-get_sparoranks_from_counts <- function(counts_data,
+get_ranks_from_counts <- function(counts,
                                 count_caps =
-                                    compute_geometric_average(counts_data),
+                                    compute_geometric_average(counts),
                                 handle_ties = "min"){
 
 
@@ -321,39 +321,39 @@ get_sparoranks_from_counts <- function(counts_data,
     }
 
     # Compute rank caps' expression values or use user input
-    if(length(count_caps) == ncol(counts_data)){
+    if(length(count_caps) == ncol(counts)){
         cap_values <- count_caps
     }
     else{
         stop("SPAROscore says: Length of user entered count_caps are
-        not matching the column count od counts_data")
+        not matching the column count od counts")
     }
 
 
 
     # get original rownames and column names fo count_data
-    count_data_rnames <- dimnames(counts_data)[[1]]
-    count_data_cnames <- dimnames(counts_data)[[2]]
+    count_data_rnames <- dimnames(counts)[[1]]
+    count_data_cnames <- dimnames(counts)[[2]]
 
     # append expression caps as the last row to count_data  before ranking
-    counts_data <- append_to_matrix_like_object(counts_data, cap_values)
+    counts <- append_to_matrix_like_object(counts, cap_values)
 
 
     # print message to user as to what object is being used
-    if(inherits(counts_data, "DelayedMatrix")){
+    if(inherits(counts, "DelayedMatrix")){
         message("SPAROscore says: Ranking a DelayedMatrix object")
     }
-    else if(inherits(counts_data, "sparseMatrix")){
+    else if(inherits(counts, "sparseMatrix")){
         message("SPAROscore says: Ranking a sparseMatrix object")
     }
-    else if(is.matrix(counts_data)){
+    else if(is.matrix(counts)){
         message("SPAROscore says: Ranking a matrix object")
     }
 
 
 
     # Rank each column of gene expressions along with the expression caps
-    full_rank_data <- MatrixGenerics::colRanks(-counts_data,
+    full_rank_data <- MatrixGenerics::colRanks(-counts,
                                           ties.method = handle_ties,
                                           preserveShape = TRUE,
                                           useNames =  FALSE)
@@ -364,7 +364,7 @@ get_sparoranks_from_counts <- function(counts_data,
 
     # separate the ranks and rank caps and return
 
-    return(list(sparoranks = full_rank_data[count_data_rnames, ],
+    return(list(ranks = full_rank_data[count_data_rnames, ],
                 rank_caps = full_rank_data["rank_caps", ]))
 }
 
@@ -430,21 +430,21 @@ get_sparoranks_from_counts <- function(counts_data,
 #'
 #' @examples
 #' # validate gene signatures
-#' num_genes <- nrow(counts_data)
-#' valid_gene_signature <- validate_signature(signature_genes,
-#' rownames(counts_data))
+#' num_genes <- nrow(counts)
+#' valid_gene_signature <- validate_signature(signatures,
+#' rownames(counts))
 #'
 #' valid_genes <- valid_gene_signature$valid_genes
 #' missing_genes <- valid_gene_signature$missing_genes
 #'
 #' # get sparoroanks
-#' sparoranks <- get_sparoranks_from_counts(counts_data)
+#' ranks <- get_ranks_from_counts(counts)
 #'
 #'
 #'
 #' compute_sparoscore_per_cell(
-#' signature_ranks_vector = sparoranks$sparoranks[signature_genes, cell_id],
-#' rank_cap = sparoranks$rank_caps[cell_id],
+#' signature_ranks_vector = ranks$ranks[signatures, cell_id],
+#' rank_cap = ranks$rank_caps[cell_id],
 #' handle_missing_genes = "skip",
 #' missing_geneset = missing_genes)
 #'
@@ -504,23 +504,23 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #' excluded from the calculation or imputed using the capped rank value.
 #'
 #'
-#' @param sparoranks A matrix of gene ranks produced by
-#' get_sparoranks_from_counts(). Rows correspond to genes and columns
+#' @param ranks A matrix of gene ranks produced by
+#' get_ranks_from_counts(). Rows correspond to genes and columns
 #' correspond to samples, cells, or spatial locations.
 #'
 #'
 #' @param rank_caps Numeric vector containing the rank cap for each column of
-#' sparoranks. Typically obtained from the rank_caps element returned by
-#' get_sparoranks_from_counts().
+#' ranks. Typically obtained from the rank_caps element returned by
+#' get_ranks_from_counts().
 #'
 #'
-#' @param signature_genes Character vector containing the genes that define the
+#' @param signatures Character vector containing the genes that define the
 #' signature of interest. Gene identifiers must match the row names of
-#' sparoranks.
+#' ranks.
 #'
 #'
 #' @param handle_missing_genes Character string specifying how signature genes
-#' absent from sparoranks should be handled:
+#' absent from ranks should be handled:
 #' \itemize{
 #' \item "skip" (default): exclude missing genes from score
 #' calculation.
@@ -530,12 +530,12 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #'
 #'
 #' @return A named numeric vector of SPAROscores, with one score per column of
-#' sparoranks.
+#' ranks.
 #'
 #'
 #' @details
 #' The supplied signature is first validated against the genes present in
-#' sparoranks. Missing genes are reported and handled according to
+#' ranks. Missing genes are reported and handled according to
 #' handle_missing_genes.
 #'
 #' For each column, gene ranks are extracted for the signature genes and passed
@@ -546,46 +546,46 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #'
 #' @examples
 #' # Generate SPARO ranks and rank caps
-#' rank_results <- get_sparoranks_from_counts(counts_data)
+#' rank_results <- get_ranks_from_counts(counts)
 #'
 #' # Compute scores for a gene signature
 #' sparoscores <- compute_sparoscores(
-#' sparoranks = rank_results$sparoranks,
+#' ranks = rank_results$ranks,
 #' rank_caps = rank_results$rank_caps,
-#' signature_genes = c("CCR7", "IL7R", "LTB")
+#' signatures = c("CCR7", "IL7R", "LTB")
 #' )
 #'
 #' # Include missing signature genes by imputing capped ranks
 #' sparoscores <- compute_sparoscores(
-#' sparoranks = rank_results$sparoranks,
+#' ranks = rank_results$ranks,
 #' rank_caps = rank_results$rank_caps,
-#' signature_genes = c("CCR7", "IL7R", "LTB"),
+#' signatures = c("CCR7", "IL7R", "LTB"),
 #' handle_missing_genes = "impute"
 #' )
 #'
 #' @seealso
-#' \code{\link{get_sparoranks_from_counts}},
+#' \code{\link{get_ranks_from_counts}},
 #' \code{\link{compute_sparoscore_per_cell}},
 #' \code{\link{validate_signature}}
 #'
 #'
-compute_sparoscores <- function(sparoranks,
+compute_sparoscores <- function(ranks,
                              rank_caps,
-                             signature_genes,
+                             signatures,
                              handle_missing_genes = "skip"){
 
 
-    # Get all available genes names from the sparoranks
-    available_genes <- rownames(sparoranks)
+    # Get all available genes names from the ranks
+    available_genes <- rownames(ranks)
 
-    # validate the signature_genes
-    valid_gene_signature <- validate_signature(signature_genes, available_genes)
+    # validate the signatures
+    valid_gene_signature <- validate_signature(signatures, available_genes)
 
-    # subset the ranks for only the valid_genes from signature_genes
-    signature_rank_matrix <- sparoranks[valid_gene_signature$valid_genes, ]
+    # subset the ranks for only the valid_genes from signatures
+    signature_rank_matrix <- ranks[valid_gene_signature$valid_genes, ]
 
     # get the rank cap values
-    if(length(rank_caps) == ncol(sparoranks)){
+    if(length(rank_caps) == ncol(ranks)){
         rank_caps <- rank_caps
     }
     else{
@@ -628,7 +628,7 @@ compute_sparoscores <- function(sparoranks,
 #'
 #' @param seurat_object A Seurat object containing expression data.
 #'
-#' @param signature_genes Character vector containing the genes that define the
+#' @param signatures Character vector containing the genes that define the
 #' signature to score. Gene identifiers must match the feature names in the
 #' selected assay.
 #'
@@ -638,13 +638,13 @@ compute_sparoscores <- function(sparoranks,
 #' @param layer Character string specifying the assay layer containing
 #' expression counts. Defaults to "counts".
 #'
-#' @param use_existing_sparoranks Logical indicating whether previously
-#' calculated SPARO ranks stored in the assay layer "sparoranks" should be
+#' @param is_assay_ranks Logical indicating whether previously
+#' calculated SPARO ranks stored in the assay layer "ranks" should be
 #' used instead of recalculating ranks from expression data.
 #'
-#' @param store_sparoranks Logical indicating whether newly computed SPARO
+#' @param store_ranks Logical indicating whether newly computed SPARO
 #' ranks should be stored in the selected assay under the layer name
-#' "sparoranks".
+#' "ranks".
 #'
 #' @param count_caps Optional numeric vector of expression values used to
 #' derive rank caps during SPARO rank calculation. If NULL, geometric mean
@@ -652,10 +652,10 @@ compute_sparoscores <- function(sparoranks,
 #'
 #' @param rank_caps Optional numeric vector of rank cap values used during
 #' SPAROscore calculation. If NULL, rank caps returned by
-#' get_sparoranks_from_counts() are used.
+#' get_ranks_from_counts() are used.
 #'
 #' @param handle_ties Character string specifying how tied expression values
-#' are ranked. Passed to get_sparoranks_from_counts(). Supported values are
+#' are ranked. Passed to get_ranks_from_counts(). Supported values are
 #' "min", "max", "average", and "random".
 #'
 #' @param handle_missing_genes Character string specifying how signature genes
@@ -672,16 +672,16 @@ compute_sparoscores <- function(sparoranks,
 #' signature.
 #' \item A metadata column named "SPARO_rank_caps" containing the rank cap
 #' for each cell.
-#' \item Optionally, a "sparoranks" layer in the selected assay if
-#' store_sparoranks = TRUE.
+#' \item Optionally, a "ranks" layer in the selected assay if
+#' store_ranks = TRUE.
 #' }
 #'
 #' @details
-#' If use_existing_sparoranks = FALSE, SPARO ranks are computed from the
+#' If is_assay_ranks = FALSE, SPARO ranks are computed from the
 #' selected assay layer before score calculation.
 #'
-#' If use_existing_sparoranks = TRUE, the function expects a layer named
-#' "sparoranks" to already exist in the selected assay. Stored rank caps are
+#' If is_assay_ranks = TRUE, the function expects a layer named
+#' "ranks" to already exist in the selected assay. Stored rank caps are
 #' retrieved from the metadata column "SPARO_rank_caps" unless explicitly
 #' provided through rank_caps.
 #'
@@ -692,52 +692,52 @@ compute_sparoscores <- function(sparoranks,
 #' # Compute SPAROscores directly from RNA counts
 #' seurat_object <- augment_sparoscores_seurat(
 #' seurat_object = seurat_object,
-#' signature_genes = c("CCR7", "IL7R", "LTB")
+#' signatures = c("CCR7", "IL7R", "LTB")
 #' )
 #'
 #' # Store SPARO ranks for later reuse
 #' seurat_object <- augment_sparoscores_seurat(
 #' seurat_object = seurat_object,
-#' signature_genes = c("CCR7", "IL7R", "LTB"),
-#' store_sparoranks = TRUE
+#' signatures = c("CCR7", "IL7R", "LTB"),
+#' store_ranks = TRUE
 #' )
 #'
 #' # Reuse previously stored SPARO ranks
 #' seurat_object <- augment_sparoscores_seurat(
 #' seurat_object = seurat_object,
-#' signature_genes = c("CCR7", "IL7R", "LTB"),
-#' use_existing_sparoranks = TRUE
+#' signatures = c("CCR7", "IL7R", "LTB"),
+#' is_assay_ranks = TRUE
 #' )
 #'
 #' @seealso
-#' \code{\link{get_sparoranks_from_counts}},
+#' \code{\link{get_ranks_from_counts}},
 #' \code{\link{compute_sparoscores}}
 augment_sparoscores_seurat <- function(seurat_object,
-                                       signature_genes,
+                                       signatures,
                                        assay = "RNA",
                                        layer = "count",
-                                       use_existing_sparoranks = FALSE,
-                                       store_sparoranks = FALSE,
+                                       is_assay_ranks = FALSE,
+                                       store_ranks = FALSE,
                                        count_caps = NULL,
                                        rank_caps = NULL,
                                        handle_ties = "min",
                                        handle_missing_genes = "skip"){
 
 
-    if(!is.logical(use_existing_sparoranks)){
-        stop("SPAROscore says: use_existing_sparoranks should be a boolean")
+    if(!is.logical(is_assay_ranks)){
+        stop("SPAROscore says: is_assay_ranks should be a boolean")
     }
 
-    if(!is.logical(store_sparoranks)){
-        stop("SPAROscore says: store_sparoranks should be a boolean")
+    if(!is.logical(store_ranks)){
+        stop("SPAROscore says: store_ranks should be a boolean")
     }
 
     # if user ask to use pre-calculated ranks
-    if(use_existing_sparoranks){
-        # extract precalculated sparoranks and rank_caps
-        sparoranks <- Seurat::GetAssayData(seurat_object,
+    if(is_assay_ranks){
+        # extract precalculated ranks and rank_caps
+        ranks <- Seurat::GetAssayData(seurat_object,
                                    assay = assay,
-                                   layer = "sparoranks")
+                                   layer = "ranks")
 
         # set rank_caps to pre-calculated values unless provided by the user
         if(is.null(rank_caps)){
@@ -749,21 +749,21 @@ augment_sparoscores_seurat <- function(seurat_object,
         }
 
 
-        sparoscores <- get_sparoscores(sparoranks =  sparoranks,
+        sparoscores <- get_scores(ranks =  ranks,
                                        rank_caps = rank_caps,
-                                       signature_genes =  signature_genes,
+                                       signatures =  signatures,
                                        handle_missing_genes =
                                            handle_missing_genes)
     }
     else{
         #extract count matrix from data
-        counts_data <- Seurat::GetAssayData(seurat_object,
+        counts <- Seurat::GetAssayData(seurat_object,
                                         assay = assay,
                                         layer = layer)
 
         # set count caps to geometric averages unless provided by the user
         if(is.null(count_caps)){
-            count_caps <- compute_geometric_average(counts_data)
+            count_caps <- compute_geometric_average(counts)
         }
         else{
             count_caps <- count_caps
@@ -771,38 +771,38 @@ augment_sparoscores_seurat <- function(seurat_object,
 
 
         # get outputs for sparoranking function
-        get_sparoranks_output <- get_sparoranks(counts_data = counts_data,
+        get_ranks_output <- get_ranks(counts = counts,
                                                 count_caps = count_caps,
                                                 handle_ties = handle_ties)
 
-        # set sparoranks for future input
-        sparoranks <- get_sparoranks_output$sparoranks
+        # set ranks for future input
+        ranks <- get_ranks_output$ranks
 
 
         # set rank_caps to geometric averages unless provided by the user
         if(is.null(rank_caps)){
-            rank_caps <- get_sparoranks_output$rank_caps
+            rank_caps <- get_ranks_output$rank_caps
         }
         else{
             rank_caps <- rank_caps
         }
 
 
-        sparoscores <- get_sparoscores(sparoranks =  sparoranks,
+        sparoscores <- get_scores(ranks =  ranks,
                                        rank_caps = rank_caps,
-                                       signature_genes =  signature_genes,
+                                       signatures =  signatures,
                                        handle_missing_genes =
                                            handle_missing_genes)
     }
 
 
 
-    # store the ranks in sparoranks layer of the assay if user asks
-    if(store_sparoranks){
+    # store the ranks in ranks layer of the assay if user asks
+    if(store_ranks){
         seurat_object <- Seurat::SetAssayData(object = seurat_object,
                                               assay = assay,
-                                              layer = "sparoranks",
-                                              new.data = sparoranks)
+                                              layer = "ranks",
+                                              new.data = ranks)
     }
 
 
@@ -835,19 +835,19 @@ augment_sparoscores_seurat <- function(seurat_object,
 #' SpatialExperiment or RangedSummarizedExperiment object
 #'
 #'
-#' @param signature_genes Character vector of genes defining the signature.
+#' @param signatures Character vector of genes defining the signature.
 #' Gene identifiers must match `rownames()` of the selected assay.
 #'
 #'
 #' @param assay Character string specifying the assay to use. Defaults to "RNA".
 #'
 #'
-#' @param use_existing_sparoranks Logical indicating whether previously stored
-#' SPAROranks in an assay named `"sparoranks"` should be used.
+#' @param is_assay_ranks Logical indicating whether previously stored
+#' ranks in an assay named `"ranks"` should be used.
 #'
 #'
-#' @param store_sparoranks Logical indicating whether to store computed
-#' SPAROranks in the assay `"sparoranks"`.
+#' @param store_ranks Logical indicating whether to store computed
+#' ranks in the assay `"ranks"`.
 #'
 #'
 #' @param count_caps Optional numeric vector of expression values used to
@@ -857,11 +857,11 @@ augment_sparoscores_seurat <- function(seurat_object,
 #'
 #' @param rank_caps Optional numeric vector of rank cap values used during
 #' SPAROscore calculation. If NULL, rank caps returned by
-#' get_sparoranks_from_counts() are used.
+#' get_ranks_from_counts() are used.
 #'
 #'
 #' @param handle_ties Character string specifying how tied expression values
-#' are ranked. Passed to get_sparoranks_from_counts(). Supported values are
+#' are ranked. Passed to get_ranks_from_counts(). Supported values are
 #' "min", "max", "average", and "random".
 #'
 #'
@@ -878,13 +878,13 @@ augment_sparoscores_seurat <- function(seurat_object,
 #' \itemize{
 #'   \item SPAROscores added to `colData(sce_object)`
 #'   \item A column `"SPARO_rank_caps"` in `colData`
-#'   \item Optionally, a `"sparoranks"` assay if `store_sparoranks = TRUE`
+#'   \item Optionally, a `"ranks"` assay if `store_ranks = TRUE`
 #' }
 #'
 #'
 #' @details
-#' If `use_existing_sparoranks = FALSE`, ranks are computed from the selected
-#' assay. Otherwise, stored `"sparoranks"` assay values are used.
+#' If `is_assay_ranks = FALSE`, ranks are computed from the selected
+#' assay. Otherwise, stored `"ranks"` assay values are used.
 #'
 #' SPAROscores are computed using the normalized Spearman footrule distance
 #' between signature gene ranks and rank caps.
@@ -895,38 +895,38 @@ augment_sparoscores_seurat <- function(seurat_object,
 #'
 #' sce <- augment_sparoscores_sce(
 #'   sce_object = sce,
-#'   signature_genes = c("CCR7", "IL7R", "LTB")
+#'   signatures = c("CCR7", "IL7R", "LTB")
 #' )
 #'
 #' @seealso
-#' \code{\link{get_sparoranks_from_counts}},
-#' \code{\link{get_sparoscores}},
+#' \code{\link{get_ranks_from_counts}},
+#' \code{\link{get_scores}},
 #' \code{\link{compute_geometric_average}}
 #'
 #'
 augment_sparoscores_sce <- function(sce_object,
-                            signature_genes,
+                            signatures,
                             assay = "RNA",
-                            use_existing_sparoranks = FALSE,
-                            store_sparoranks = FALSE,
+                            is_assay_ranks = FALSE,
+                            store_ranks = FALSE,
                             count_caps = NULL,
                             rank_caps = NULL,
                             handle_ties = "min",
                             handle_missing_genes = "skip"){
 
-    if(!is.logical(use_existing_sparoranks)){
-        stop("SPAROscore says: use_existing_sparoranks should be a boolean")
+    if(!is.logical(is_assay_ranks)){
+        stop("SPAROscore says: is_assay_ranks should be a boolean")
     }
 
-    if(!is.logical(store_sparoranks)){
-        stop("SPAROscore says: store_sparoranks should be a boolean")
+    if(!is.logical(store_ranks)){
+        stop("SPAROscore says: store_ranks should be a boolean")
     }
 
     # if user ask to use pre-calculated ranks
-    if(use_existing_sparoranks){
-        # extract precalculated sparoranks and rank_caps
-        sparoranks <- SummarizedExperiment::assay(sce_object,
-                                           assay = "sparoranks")
+    if(is_assay_ranks){
+        # extract precalculated ranks and rank_caps
+        ranks <- SummarizedExperiment::assay(sce_object,
+                                           assay = "ranks")
 
         # set rank_caps to pre-calculated values unless provided by the user
         if(is.null(rank_caps)){
@@ -938,20 +938,20 @@ augment_sparoscores_sce <- function(sce_object,
         }
 
 
-        sparoscores <- get_sparoscores(sparoranks =  sparoranks,
+        sparoscores <- get_scores(ranks =  ranks,
                                        rank_caps = rank_caps,
-                                       signature_genes =  signature_genes,
+                                       signatures =  signatures,
                                        handle_missing_genes =
                                            handle_missing_genes)
     }
     else{
         #extract count matrix from data
-        counts_data <- SummarizedExperiment::assay(sce_object,
+        counts <- SummarizedExperiment::assay(sce_object,
                                                    assay = assay)
 
         # set count caps to geometric averages unless provided by the user
         if(is.null(count_caps)){
-            count_caps <- compute_geometric_average(counts_data)
+            count_caps <- compute_geometric_average(counts)
         }
         else{
             count_caps <- count_caps
@@ -959,36 +959,36 @@ augment_sparoscores_sce <- function(sce_object,
 
 
         # get outputs for sparoranking function
-        get_sparoranks_output <- get_sparoranks(counts_data = counts_data,
+        get_ranks_output <- get_ranks(counts = counts,
                                                 count_caps = count_caps,
                                                 handle_ties = handle_ties)
 
-        # set sparoranks for future input
-        sparoranks <- get_sparoranks_output$sparoranks
+        # set ranks for future input
+        ranks <- get_ranks_output$ranks
 
 
         # set rank_caps to geometric averages unless provided by the user
         if(is.null(rank_caps)){
-            rank_caps <- get_sparoranks_output$rank_caps
+            rank_caps <- get_ranks_output$rank_caps
         }
         else{
             rank_caps <- rank_caps
         }
 
 
-        sparoscores <- get_sparoscores(sparoranks =  sparoranks,
+        sparoscores <- get_scores(ranks =  ranks,
                                        rank_caps = rank_caps,
-                                       signature_genes =  signature_genes,
+                                       signatures =  signatures,
                                        handle_missing_genes =
                                            handle_missing_genes)
     }
 
 
 
-    # store the ranks in sparoranks layer of the assay if user asks
-    if(store_sparoranks){
+    # store the ranks in ranks layer of the assay if user asks
+    if(store_ranks){
         SummarizedExperiment::assay(
-            sce_object, "sparoranks") <- sparoranks
+            sce_object, "ranks") <- ranks
     }
 
 

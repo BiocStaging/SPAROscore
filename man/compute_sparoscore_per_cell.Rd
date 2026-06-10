@@ -63,21 +63,21 @@ tend to have higher expression ranks relative to the cap.
 }
 \examples{
 # validate gene signatures
-num_genes <- nrow(counts_data)
-valid_gene_signature <- validate_signature(signature_genes,
-rownames(counts_data))
+num_genes <- nrow(counts)
+valid_gene_signature <- validate_signature(signatures,
+rownames(counts))
 
 valid_genes <- valid_gene_signature$valid_genes
 missing_genes <- valid_gene_signature$missing_genes
 
 # get sparoroanks
-sparoranks <- get_sparoranks_from_counts(counts_data)
+ranks <- get_ranks_from_counts(counts)
 
 
 
 compute_sparoscore_per_cell(
-signature_ranks_vector = sparoranks$sparoranks[signature_genes, cell_id],
-rank_cap = sparoranks$rank_caps[cell_id],
+signature_ranks_vector = ranks$ranks[signatures, cell_id],
+rank_cap = ranks$rank_caps[cell_id],
 handle_missing_genes = "skip",
 missing_geneset = missing_genes)
 

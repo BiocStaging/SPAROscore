@@ -23,4 +23,5 @@ Imports:
     matrixStats,
     sparseMatrixStats
 Suggests: 
-    GSEABase
+    GSEABase,
+    Seurat
