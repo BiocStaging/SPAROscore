@@ -21,8 +21,13 @@ Imports:
     Matrix,
     MatrixGenerics,
     matrixStats,
+    methods,
     sparseMatrixStats
 Suggests: 
     GSEABase,
     Seurat,
-    SummarizedExperiment
+    SingleCellExperiment,
+    SpatialExperiment,
+    SummarizedExperiment,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

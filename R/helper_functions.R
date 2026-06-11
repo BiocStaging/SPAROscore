@@ -108,6 +108,11 @@ validate_signature <- function(signature, all_genes){
 #'
 impute_missing_gene_ranks <- function(incomplete_ranks,rank_cap, missing_genes){
 
+    # if no genes are missing, use incomplete ranks
+    if (is.null(missing_genes) || length(missing_genes) == 0) {
+        return(incomplete_ranks)
+    }
+
     # Create the additional rows of imputed ranks as a separate matrix
     imputed_ranks <- rep(rank_cap, length(missing_genes))
 
@@ -314,12 +319,24 @@ get_ranks_from_counts <- function(counts,
 
 
 
-    # check validity of input
+    # check validity of handle_ties input
     if(!(handle_ties %in%
          c("min", "max", "average", "random"))){
         stop("SPAROscore says: Invalid value provided for handle_ties
              Limit to using 'min', 'max', 'average' or 'random'")
     }
+
+    # Ensure rownames exist
+    if(is.null(rownames(counts))){
+        stop("SPAROscore says:
+             counts data do not have rownames. Add gene ids/names as rownames")
+    }
+
+    # Ensure colnames exist
+    if(is.null(colnames(counts))){
+        stop("SPAROscore says: counts data do not have colnmaes")
+    }
+
 
     # Compute rank caps' expression values or use user input
     if(length(count_caps) == ncol(counts)){
@@ -327,14 +344,14 @@ get_ranks_from_counts <- function(counts,
     }
     else{
         stop("SPAROscore says: Length of user entered count_caps are
-        not matching the column count od counts")
+        not matching the column count of counts")
     }
 
 
 
     # get original rownames and column names fo count_data
-    count_data_rnames <- dimnames(counts)[[1]]
-    count_data_cnames <- dimnames(counts)[[2]]
+    count_data_rnames <- rownames(counts)
+    count_data_cnames <- colnames(counts)
 
     # append expression caps as the last row to count_data  before ranking
     counts <- append_to_matrix_like_object(counts, cap_values)
@@ -359,14 +376,24 @@ get_ranks_from_counts <- function(counts,
                                           preserveShape = TRUE,
                                           useNames =  FALSE)
 
+    # Force matrix representation
+    full_rank_data <- as.matrix(full_rank_data)
+
     # port column names and rownames from count_data to full_rank_data
-    dimnames(full_rank_data)[[1]] <- c(count_data_rnames, "rank_caps")
-    dimnames(full_rank_data)[[2]] <- count_data_cnames
+    rownames(full_rank_data) <- c(count_data_rnames, "rank_caps")
+    colnames(full_rank_data) <- count_data_cnames
+
+    # Extract gene ranks while preserving matrix dimensions
+    gene_ranks <- full_rank_data[count_data_rnames, ,drop = FALSE]
+
+    # Extract rank caps while converting to vector
+    rank_caps <- full_rank_data["rank_caps", , drop = TRUE]
+
 
     # separate the ranks and rank caps and return
 
-    return(list(ranks = full_rank_data[count_data_rnames, ],
-                rank_caps = full_rank_data["rank_caps", ]))
+    return(list(ranks = gene_ranks,
+                rank_caps = rank_caps))
 }
 
 
@@ -576,14 +603,32 @@ compute_sparoscores <- function(ranks,
                              handle_missing_genes = "skip"){
 
 
+    #valide the ranks matrix
+    if (anyNA(ranks)) {
+        stop("SPAROscore says: ranks contain NA values")
+    }
+    if (any(!is.finite(ranks))) {
+        stop("SPAROscore says: ranks must be finite numeric values")
+    }
+
     # Get all available genes names from the ranks
     available_genes <- rownames(ranks)
 
     # validate the signatures
     valid_gene_signature <- validate_signature(signatures, available_genes)
 
-    # subset the ranks for only the valid_genes from signatures
-    signature_rank_matrix <- ranks[valid_gene_signature$valid_genes, ]
+    # subset the ranks for only the valid_genes from signatures and assign
+    # missing genes
+    if (handle_missing_genes == "skip") {
+        signature_rank_matrix <- ranks[valid_gene_signature$valid_genes, ,
+                                       drop = FALSE]
+        missing_genes <- character(0)
+    } else {
+        signature_rank_matrix <- ranks[valid_gene_signature$valid_genes, ,
+                                       drop = FALSE]
+        missing_genes <- valid_gene_signature$missing_genes
+    }
+
 
     # get the rank cap values
     if(length(rank_caps) == ncol(ranks)){
@@ -593,6 +638,13 @@ compute_sparoscores <- function(ranks,
         stop("SPAROscore says: Invalid number of ranks provided")
     }
 
+    #validate ranks caps' names
+    if (is.null(names(rank_caps)) || any(names(rank_caps) == "")) {
+        stop("SPAROscore says: rank_caps must be a named vector")
+    }
+    if (!all(colnames(ranks) %in% names(rank_caps))) {
+        stop("SPAROscore says: rank_caps names must match input data columns")
+    }
 
     # Calculate sparoscores for each column
     sparoscores <- setNames(rep(0.0,
