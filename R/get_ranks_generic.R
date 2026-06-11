@@ -105,7 +105,7 @@ setMethod("get_ranks",
               ranks <- get_ranks_from_counts(
                   counts,
                   count_caps = count_caps,
-                  handle_ties = "min")
+                  handle_ties = handle_ties)
               return(ranks)
           }
 )
@@ -122,7 +122,7 @@ setMethod("get_ranks",
               ranks <- get_ranks_from_counts(
                   counts,
                   count_caps = count_caps,
-                  handle_ties = "min")
+                  handle_ties = handle_ties)
               return(ranks)
           }
 )
@@ -139,7 +139,7 @@ setMethod("get_ranks",
               ranks <- get_ranks_from_counts(
                   counts,
                   count_caps = count_caps,
-                  handle_ties = "min")
+                  handle_ties = handle_ties)
               return(ranks)
           }
 )
@@ -156,7 +156,7 @@ setMethod("get_ranks",
               ranks <- get_ranks_from_counts(
                   as.matrix(counts),
                   count_caps = count_caps,
-                  handle_ties = "min")
+                  handle_ties = handle_ties)
               return(ranks)
           }
 )
