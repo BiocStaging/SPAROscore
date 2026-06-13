@@ -45,3 +45,4 @@ compute_geometric_average(counts)
 
 
 }
+\keyword{internal}

@@ -73,7 +73,9 @@ rank_caps component returned by .
 When data_has_ranks = TRUE and rank_cpas is NULL (default), rank caps are
 obtained from \code{\link{get_ranks}} for matrix-like objects,
 retrieved from the "rank_caps" column of metadata for Seurat and
-SummarizedExperiment objects}
+SummarizedExperiment objects
+
+When both count_caps and rank_cpas are provided, rank_caps takes precedence.}
 
 \item{handle_ties}{Character string specifying how tied expression values
 should be ranked. Passed directly to
@@ -151,9 +153,25 @@ When data_has_ranks = FALSE, feature ranks are first computed using
 get_ranks(). When data_has_ranks = TRUE, the supplied ranks are used
 directly and rank computation is skipped.
 
-Missing signature genes can either be excluded from scoring ("skip") or
+
+The supplied signature genes are first matched against the genes available
+in ranks. Missing genes can either be excluded from scoring ("skip") or
 assigned the capped rank value and included in score calculation
 ("impute").
+
+For each sample, cell, or spatial domain, SPAROscores are computed using
+\code{\link{compute_sparoscores}}, which evaluates the normalized Spearman
+footrule distance between observed signature gene ranks and the
+column-specific rank cap.
+
+Rank caps typically correspond to the rank of the geometric mean expression
+value estimated by \code{\link{get_ranks}}, although custom rank caps
+may also be supplied.
+
+
+Scores typically range from 0 to 1, where high scores indicate high
+signature gene expression, and low scores indicate signature expression
+closer to the cap value.
 }
 \examples{
 # ------------------------------------------------------------------
@@ -195,6 +213,26 @@ data = seurat_object,
 signatures = c("CCR7", "IL7R", "LTB")
 )
 
+# use custom count caps to measure distance from zero expression
+zero_counts <- rep(0, nrow(seurat_object[[]]))
+names(zero_counts) <- rownames(seurat_object[[]])
+seurat_object <- sparoscore(
+data = seurat_object,
+signatures = c("CCR7", "IL7R", "LTB")
+count_caps <- zero_counts
+)
+
+
+# use custom rank caps to consider all the genes
+custom_ranks <- rep(dim(seurat_object)[1], seurat_object)[2])
+names(custom_ranks) <- rownames(seurat_object[[]])
+seurat_object <- sparoscore(
+data = seurat_object,
+signatures = c("CCR7", "IL7R", "LTB")
+rank_caps <- custom_ranks
+)
+
+
 # Reuse previously computed ranks
 seurat_object <- sparoscore(
 data = seurat_object,
@@ -214,6 +252,7 @@ data = sce,
 signatures = c("CCR7", "IL7R", "LTB")
 )
 
+# Reuse previously computed ranks
 sce <- sparoscore(
 data = sce,
 signatures = c("CCR7", "IL7R", "LTB"),

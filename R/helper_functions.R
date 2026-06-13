@@ -9,6 +9,8 @@
 #' `all_genes`. An error is raised if none of the supplied signature genes are
 #' present.
 #'
+#' @noRd
+#'
 #'
 #' @param signature Character vector containing the genes that define the
 #'   signature to be scored.
@@ -44,7 +46,7 @@
 #'   all_genes = rownames(ranks)
 #' )
 #'
-#'
+
 validate_signature <- function(signature, all_genes){
 
     valid_signature <- signature[signature %in% all_genes]
@@ -74,6 +76,8 @@ validate_signature <- function(signature, all_genes){
 #' `rank_cap`. The imputed ranks are appended to the supplied vector of
 #' available gene ranks, producing a complete rank vector for downstream
 #' signature scoring.
+#'
+#' @noRd
 #'
 #'
 #' @param incomplete_ranks Numeric vector containing the ranks of signature
@@ -131,6 +135,8 @@ impute_missing_gene_ranks <- function(incomplete_ranks,rank_cap, missing_genes){
 #'
 #' The supplied vector is converted to the appropriate one-row representation
 #' before being combined with the input object.
+#'
+#' @noRd
 #'
 #'
 #' @param matrix_like_object A matrix-like object to which a new row will be
@@ -201,6 +207,8 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #' \deqn{\exp(\mathrm{mean}(\log(1 + x)))}
 #' where \eqn{x} represents the expression values in a column.
 #'
+#' @keywords internal
+#'
 #'
 #' @param counts A matrix-like object containing expression counts, with
 #' genes in rows and samples, cells, or spatial locations in columns.
@@ -233,9 +241,11 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #'
 compute_geometric_average <-function(counts){
     message("SPAROscore says: Calculating column-wise geometric averages")
-    cap_values <- apply(counts, 2,
-                        function(x){exp(mean(log(1+ x),
-                                             na.rm = TRUE))})
+    # cap_values <- apply(counts, 2,
+    #                     function(x){exp(mean(log(1+ x),
+    #                                          na.rm = TRUE))})
+
+    cap_values <- exp(MatrixGenerics::colMeans(log1p(counts), na.rm = TRUE))
     return(cap_values)
 }
 
@@ -250,6 +260,8 @@ compute_geometric_average <-function(counts){
 #' Rank caps are incorporated by temporarily appending a row of cap expression
 #' values to the count matrix before ranking. The resulting rank of each cap
 #' value is returned separately from the gene rank matrix.
+#'
+#' @noRd
 #'
 #'
 #' @param counts A matrix-like object containing expression counts, with
@@ -413,6 +425,8 @@ get_ranks_from_counts <- function(counts,
 #' rank_cap. Missing signature genes can either be ignored or imputed with
 #' the capped rank.
 #'
+#' @noRd
+#'
 #'
 #' @param signature_ranks_vector Numeric or integer vector containing the ranks
 #' of signature genes for a single sample, cell, or spatial location.
@@ -530,6 +544,8 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #'
 #' Signature genes that are not present in the ranked dataset can either be
 #' excluded from the calculation or imputed using the capped rank value.
+#'
+#' @noRd
 #'
 #'
 #' @param ranks A matrix of gene ranks produced by
@@ -677,6 +693,8 @@ compute_sparoscores <- function(ranks,
 #' This function is implemented as an S4 generic and supports multiple
 #' matrix-like input classes, including dense matrices, sparse matrices,
 #' delayed matrices, and data frames.
+#'
+#' @noRd
 #'
 #'
 #' @param matrix_object A matrix-like object with genes in rows and samples,
@@ -831,6 +849,8 @@ augment_sparoscores_matrix <- function(matrix_object,
 #' scores in the metadata of a Seurat object.
 #' Ranks can either be calculated from
 #' an expression layer or retrieved from previously stored ranks.
+#'
+#' @noRd
 #'
 #'
 #' @param seurat_object A Seurat object containing expression/rank data.
@@ -1053,6 +1073,9 @@ augment_sparoscores_seurat <- function(seurat_object,
 #' Depending on data_has_ranks, the function either computes feature ranks
 #' from an expression assay or uses pre-computed ranks stored in an assay.
 #' Rank caps are calculated automatically when not supplied.
+#'
+#' @noRd
+#'
 #'
 #' @param sce_object A SummarizedExperiment-derived object containing
 #' expression data or pre-computed ranks.
