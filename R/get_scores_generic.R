@@ -65,10 +65,9 @@
 #' in ranks. Missing genes are reported and handled according to
 #' handle_missing_genes.
 #'
-#' For each sample, cell, or spatial domain, SPAROscores are computed using
-#' \code{\link{compute_sparoscores}}, which evaluates the normalized Spearman
-#' footrule distance between observed signature gene ranks and the
-#' column-specific rank cap.
+#' For each sample, cell, or spatial domain, SPAROscores are computed as
+#'  the normalized Spearmancfootrule distance between observed signature
+#'  gene ranks and the column-specific rank cap.
 #'
 #' Rank caps typically correspond to the rank of the geometric mean expression
 #' value estimated by \code{\link{get_ranks}}, although custom rank caps

@@ -60,7 +60,7 @@ calculations.
 get_ranks() computes column-wise gene ranks from expression count
 data and derives a rank cap for each sample, cell, or spatial location.
 The resulting rank matrix and rank caps can be supplied directly to
-\code{\link{compute_sparoscores}}.
+\code{\link{get_scores}}.
 
 Internally, ranks are computed using
 MatrixGenerics::colRanks(). Gene expression values are ranked in
