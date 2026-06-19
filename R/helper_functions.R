@@ -980,6 +980,14 @@ augment_sparoscores_seurat <- function(seurat_object,
         stop("SPAROscore says: data_has_ranks should be a boolean")
     }
 
+    if(!(assay %in% Seurat::Assays(seurat_object))){
+        stop("SPAROscore says: assay passed is not in the seurat_object")
+    }
+
+    if(!(layer %in% seurat_object[[assay]][])){
+        stop("SPAROscore says: layer passed is not in the seurat_object")
+    }
+
     # if user ask to use pre-calculated ranks
     if(data_has_ranks){
         # extract precalculated ranks and rank_caps
@@ -1185,6 +1193,10 @@ augment_sparoscores_sce <- function(sce_object,
 
     if(!is.logical(data_has_ranks)){
         stop("SPAROscore says: data_has_ranks should be a boolean")
+    }
+
+    if(!(assay %in% SummarizedExperiment::assayNames(sce_object))){
+        stop("SPAROscore says: assay passed is not in the data")
     }
 
     # if user ask to use pre-calculated ranks

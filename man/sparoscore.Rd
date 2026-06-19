@@ -224,7 +224,7 @@ count_caps <- zero_counts
 
 
 # use custom rank caps to consider all the genes
-custom_ranks <- rep(dim(seurat_object)[1], seurat_object)[2])
+custom_ranks <- rep(dim(seurat_object)[1], seurat_object[2])
 names(custom_ranks) <- rownames(seurat_object[[]])
 seurat_object <- sparoscore(
 data = seurat_object,
