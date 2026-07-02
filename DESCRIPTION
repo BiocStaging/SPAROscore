@@ -27,9 +27,12 @@ Suggests:
     airway,
     ggplot2,
     GSEABase,
+    knitr,
+    rmarkdown,
     Seurat,
     SingleCellExperiment,
     SpatialExperiment,
     SummarizedExperiment,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
