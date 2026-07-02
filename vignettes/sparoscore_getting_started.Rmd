@@ -1,8 +1,27 @@
 ---
 title: "SPAROscore: Getting Started"
-author: "Venkatesh Kamaraj"
-format: html
+package: SPAROscore
+author: Venkatesh Kamaraj
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SPAROscore: Getting Started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, warning=FALSE, message=FALSE}
+# load the necessary librarieslibr
+library(SPAROscore)
+library(airway)
+library(ggplot2)
+```
 
 # What is SPAROscore?
 SPAROscore is a gene signature scoring method designed to be 
@@ -33,11 +52,7 @@ As an example gene signature, we use the top differentially expressed genes
 reported in Himes et al.
 
 ## Load the dataset
-```{r}
-library(SPAROscore)
-library(airway)
-library(ggplot2)
-
+```{r, warning=FALSE, message=FALSE}
 # load the airway dataset
 data(airway)
 
@@ -57,7 +72,7 @@ signature_genes <- c("ENSG00000112936", "ENSG00000170606", "ENSG00000120129",
 ```
 
 ## Compute signature scores using SPAROscore
-```{r}
+```{r, results = "markup"}
 scores <- sparoscore(data = counts_data, signatures = signature_genes)
 
 # view the scores
