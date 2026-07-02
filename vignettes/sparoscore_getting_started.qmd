@@ -1,0 +1,110 @@
+---
+title: "SPAROscore: Getting Started"
+author: "Venkatesh Kamaraj"
+format: html
+---
+
+# What is SPAROscore?
+SPAROscore is a gene signature scoring method designed to be 
+robust across diverse gene expression datasets.
+SPAROscore adapts to varying levels of sparsity, allowing signature scores to be 
+efficiently computed across bulk, single-cell, 
+and spatial transcriptomic datasets.
+
+The resulting scores quantify the relative expression of a gene signature 
+compared with the background expression of the same sample/cell/domain, 
+making the scores straightforward to interpret biologically.
+
+Internally, SPAROscore ranks genes within each column and 
+computes the Spearman footrule distance between the observed ranks of the 
+signature genes and a background gene expression rank estimated from the 
+geometric mean expression of the sample, cell, or spatial domain.
+
+# How to use SPAROscore?
+To use SPAROscore, at minimum, a gene expression matrix and
+one or more gene signatures are required. 
+
+To demonstrate this, we will use the gene expression matrix 
+from the `airway` package, containing RNA-seq read counts from eight 
+human airway smooth muscle (ASM) cell line samples: 
+four treated with dexamethasone and four untreated controls.
+
+As an example gene signature, we use the top differentially expressed genes 
+reported in Himes et al.
+
+## Load the dataset
+```{r}
+library(SPAROscore)
+library(airway)
+library(ggplot2)
+
+# load the airway dataset
+data(airway)
+
+# extract the gene expression matrix
+counts_data <- assay(airway)
+
+# extract the metadata
+metadata <- as.data.frame(colData(airway))
+
+# set the glucocorticoid response markers as the gene signature 
+signature_genes <- c("ENSG00000112936", "ENSG00000170606", "ENSG00000120129", 
+                     "ENSG00000152795", "ENSG00000211445", "ENSG00000163884",
+                     "ENSG00000189221", "ENSG00000101347", "ENSG00000196136", 
+                     "ENSG00000152583", "ENSG00000120658", "ENSG00000157514",
+                     "ENSG00000103196", "ENSG00000179094", "ENSG00000152763",
+                     "ENSG00000103310", "ENSG00000127954")
+```
+
+## Compute signature scores using SPAROscore
+```{r}
+scores <- sparoscore(data = counts_data, signatures = signature_genes)
+
+# view the scores
+scores
+```
+
+
+## Visualise the results
+Because the selected signature consists of glucocorticoid response markers, 
+dexamethasone-treated ASM cell lines are expected to exhibit higher signature 
+scores than untreated controls.
+```{r}
+# add the signature scores to the metadata
+metadata$scores <- scores[, 1]
+
+# plot results
+ggplot(metadata, aes(x = dex, y = scores, fill = dex)) +
+    geom_boxplot() +
+    geom_jitter(width = 0.05) +
+    xlab("Dexamethasone treatment status") +
+    ylab("SPAROscore")+
+    ggtitle("SPAROscore signature scores", 
+            subtitle = "Stratified by treatment")+
+    theme_classic()
+```
+
+
+# When to use SPAROscore?
+SPAROscore can be applied to bulk RNA-seq, single-cell RNA-seq, and 
+spatial transcriptomics data, 
+adapting automatically to differences in data sparsity.
+
+More information on transcriptomics technologies can be found here: 
+[Transcriptomics technologies](sparoscore_transcriptomics_technologies.html)
+
+# What data structures can SPAROscore handle?
+SPAROscore accepts a wide variety of commonly used data structures, including
+dense matrices, sparse matrices, DelayedArray, SummarizedExperiment, 
+SingleCellExperiment, SpatialExperiment and Seurat objects
+
+More information on data structures can be found here:
+[Data structures supported by SPAROscore](sparoscore_data_structures.html)
+
+For additional options and advanced usage, see:
+[Advanced scoring options](sparoscore_advanced_options.html)
+
+
+```{r}
+sessionInfo()
+```
