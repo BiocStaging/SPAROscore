@@ -33,7 +33,7 @@ As an example gene signature, we use the top differentially expressed genes
 reported in Himes et al.
 
 ## Load the dataset
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(SPAROscore)
 library(airway)
 library(ggplot2)
