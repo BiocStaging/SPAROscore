@@ -2,6 +2,7 @@
 title: "SPAROscore: Getting Started"
 package: SPAROscore
 author: Venkatesh Kamaraj
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{SPAROscore: Getting Started}
@@ -116,6 +117,10 @@ More information on transcriptomics technologies can be found here:
 SPAROscore accepts a wide variety of commonly used data structures, including
 dense matrices, sparse matrices, DelayedArray, SummarizedExperiment, 
 SingleCellExperiment, SpatialExperiment and Seurat objects.
+
+When dealing with transcriptomics-specific data structures like Seurat objects
+and SummarizedExperiment-derived objects, SPAROscore append the scores to the 
+existing metadata, to enhance further analyses.
 
 More information on data structures can be found here:
 [Data structures](sparoscore_data_structures.html)

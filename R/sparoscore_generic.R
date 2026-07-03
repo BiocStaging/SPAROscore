@@ -129,7 +129,7 @@
 #'
 #' @seealso
 #' \code{\link{get_ranks}},
-#' \code{\link{get_scores}}
+#' \code{\link{get_scores}},
 #' \code{\link{compute_geometric_average}}
 #'
 #' @export
