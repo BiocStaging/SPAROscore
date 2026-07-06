@@ -13,7 +13,8 @@ sparoscore(
   count_caps = NULL,
   rank_caps = NULL,
   handle_ties = "min",
-  handle_missing_genes = "skip"
+  handle_missing_genes = "skip",
+  prefix = ""
 )
 }
 \arguments{

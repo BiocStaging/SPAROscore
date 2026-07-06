@@ -1,6 +1,6 @@
 ---
 title: "SPAROscore: Data Structures"
-package: SPAROscore
+package: "SPAROscore"
 author: "Venkatesh Kamaraj"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -32,15 +32,15 @@ library(scater)
 
 
 # Supported input data structures
-SPAROscore is designed to integrate seamlessly with data structres commonly
-used in bulk, single-cell, and spatial RNA-Seq analysis workflows. 
+SPAROscore is designed to integrate seamlessly with data structures commonly
+used in bulk, single-cell, and spatial RNA-seq analysis workflows. 
 Rather than requiring users to convert their data into a specific format, 
 SPAROscore accepts a range of gene expression and gene signature data structures. 
 This vignette demonstrates the supported input formats and illustrates 
 how the output adapts to each input type.
 
 
-1) For the gene expression dataset, the following data structures are supported
+* For gene expression input, the following data structures are supported
 
     * Matrix-like objects: Dense matrices, Sparse Matrices, Delayed Arrays, and
     Data frames
@@ -51,8 +51,26 @@ how the output adapts to each input type.
 
     * Seurat objects: containing both single-cell and spatial datasets
 
+*Note: Matrix-like inputs return a score table, whereas container objects 
+(e.g. SummarizedExperiment and Seurat) are returned with scores 
+added to their metadata.*
 
-2) For the gene signature input, the following formats are supported
+<table>
+
+| Input | Accepted | Output |
+| :--- | :---: | :--- |
+| matrix | ✓ | matrix |
+| sparseMatrix | ✓ | matrix |
+| DelayedArray | ✓ | matrix |
+| data.frame | ✓ | matrix |
+| SummarizedExperiment | ✓ | SummarizedExperiment |
+| SingleCellExperiment | ✓ | SingleCellExperiment |
+| SpatialExperiment | ✓ | SpatialExperiment |
+| Seurat | ✓ | Seurat |
+
+</table>
+
+* For the gene signature input, the following formats are supported
 
     * For a single signature: A character vector, A GeneSet object
     
@@ -61,17 +79,18 @@ how the output adapts to each input type.
 
 
 
-*Note: The Gene identifiers (gene names, ensembl ids, etc) from the gene signature
-input should match those used in the gene expression data..*
+*Note: The Gene identifiers (gene names, ensembl ids, etc) in the 
+signature must match those used in the expression data.*
+
 
 
 # Example datasets
 
 In this vignette, we will demonstrate the data structure handling capabilities 
-of  SPAROscore using the gene expression data from the `airway` package. For the
-gene signatures, we will use top differentially expressed genes 
+of  SPAROscore using the example dataset from the `airway` package. For the
+gene signatures, we will use the top differentially expressed genes 
 reported in the [original study](https://doi.org/10.1371/journal.pone.0099625), 
-as well as the hallmark inflammatory response genes taken from the MSiGDB.
+as well as the hallmark inflammatory response genes taken from the MSigDB.
 
 ## Load the gene expression dataset
 ```{r}
@@ -105,7 +124,7 @@ inflammation_genes <- msigdbr(species = "Homo sapiens", collection = "H") %>%
 ```
  
 
-# Demo 1: Gene expression as matrix-like data structures
+# Gene expression as matrix-like data structures
 
 ## Dense matrix
 ```{r}
@@ -121,7 +140,7 @@ scores_matrix
 ```
 
 Note that one signature gene is absent from the input expression data, 
-and SPAROscore reports this during scoring.
+and SPAROscore reports this as a warning during scoring.
 
 ## SparseMatrix
 ```{r}
@@ -136,8 +155,9 @@ scores_sparse <- sparoscore(data = counts_sparse,
 scores_sparse
 ```
 
-Note that the gene ranking is performed natively on the sparseMatrix object, 
-improving computational efficiency.
+Gene ranking is performed directly on sparse matrices without first converting 
+them to dense matrices, reducing memory usage and improving computational 
+efficiency.
 
 ## DelayedArrays
 ```{r}
@@ -155,7 +175,7 @@ scores_delayed
 Note that the gene ranking is performed natively on the DelayedArray object, 
 enabling improved computational efficiency.
 
-## DateFrame
+## Data frame
 ```{r}
 # load gene expression data as delayedArray
 counts_df <- as.data.frame(counts_matrix)
@@ -168,11 +188,18 @@ scores_df <- sparoscore(data = counts_df,
 scores_df
 ```
 
-Note that the data frame is internally converted to a matrix to enable 
-efficient ranking.
+Data frames are internally converted to matrices before ranking 
+because matrix operations are more efficient for this step.
 
+## Verify if the output scores are the same with differing input formats
 
-# Demo 2: Single and multiple gene signatures
+```{r}
+identical(scores_matrix, scores_sparse)
+identical(scores_matrix, scores_delayed)
+identical(scores_matrix, scores_df)
+```
+
+# Gene signature representations
 
 ## Single signature as a character vector
 ```{r}
@@ -192,7 +219,7 @@ response_geneset <- GeneSet(response_genes)
 
 # compute scores from a GeneSet object
 scores_for_geneset <- sparoscore(data = counts_sparse, 
-                                 signatures = response_geneset)
+                                 signatures = response_geneset, prefix = "hello")
 
 # view scores
 scores_for_geneset
@@ -229,11 +256,11 @@ scores_for_gsc
 ```
 
 
-# Demo 3: SummarizedExperiment and derived objects
-For SummarizedExperimet and its derived objects, post scoring, SPAROscore 
+# SummarizedExperiment and derived objects
+For SummarizedExperiment and its derived objects, after scoring, SPAROscore 
 returns an object of the same class with the scores and the rank caps
-appended to the colData. The calculate gene ranks are added to a new assay 
-names ranks.
+appended to the `colData`. The calculated gene ranks are added to a new assay 
+named `ranks`.
 
 In this example, let us work with a SingleCellExperiment object
 
@@ -253,35 +280,30 @@ airway_sce <- sparoscore(data = airway_sce,
                         signatures = response_genes)
 
 
-# view the metadata of the object post-scoring
+# view the metadata of the object after-scoring
 colData(airway_sce)
 
-# view the assays present in the object post-scoring
+# view the assays present in the object after-scoring
 assays(airway_sce)
 
 
-# the pre-calculated ranks can be used for future scoring
+# the precomputed ranks can be reused for subsequent scoring runs
 airway_sce <- sparoscore(data=airway_sce,
                          data_has_ranks = TRUE,
                          assay = "ranks",
-                         signatures = inflammation_genes)
+                         signatures = inflammation_genes,
+                         prefix = "run2_")
 
-# view the metadata of the object post-scoring
+# view the metadata of the object after-scoring
 colData(airway_sce)
 
 ```
 
-Note that scores appended to the colData can be effectively used in 
-visualisation exercises. The newly added ranks assay can be used in future 
-scoring exercises.
 
-For examples of in-depth transcriptomics analyses using SPAROscore, refer here:
-[Transcriptomics technologies](sparoscore_transcriptomics_technologies.html)
-
-# Demo 4: Seurat objects
-For Seurat objects, post scoring, SPAROscore returns a Seurat object 
+# Seurat objects
+For Seurat objects, after scoring, SPAROscore returns a Seurat object 
 with the scores and the rank caps appended to the metadata. The ranks are stored
-in a layer named ranks in the same assay as the counts.
+in a layer named `ranks` in the same assay as the counts.
 
 ```{r}
 # convert airway to a seurat object 
@@ -301,21 +323,39 @@ Layers(airway_seurat[["RNA"]])
 airway_seurat <- sparoscore(data = airway_seurat,
                     assay = "RNA",
                     layer = "counts",
-                    signatures = gene_signatures)
+                    signatures = response_genes)
 
 
-# view the metadata of the object post-scoring
+# view the metadata of the object after-scoring
 airway_seurat[[]]
 
-# view all the layers in the object post-scoring
+# view all the layers in the object after-scoring
 Layers(airway_seurat[["RNA"]])
 
-# the pre-calculated ranks can be used for scoring to reduce runtimes
+# the precomputed ranks can be reused for subsequent scoring runs
 airway_seurat <- sparoscore(data = airway_seurat,
                             data_has_ranks = TRUE,
                             assay = "RNA",
                             layer = "ranks",
-                            signatures = gene_signatures)
+                            signatures = inflammation_genes,
+                            prefix = "run2_")
+
+# view the metadata of the object after-scoring
+airway_seurat[[]]
 ```
 
-SPAROscore accepts a broad range of matrix-like objects, Bioconductor containers, and gene signature representations without requiring manual conversion. This flexibility allows the package to integrate naturally into existing bulk RNA-seq, single-cell RNA-seq, and spatial transcriptomics workflows.
+This vignette demonstrated the range of expression data containers and 
+gene signature representations accepted by SPAROscore. 
+Matrix-like inputs return score tables, while container objects such as 
+SummarizedExperiment and Seurat are returned with scores and 
+precomputed ranks integrated into the original object. 
+This design allows SPAROscore to fit naturally into existing bulk RNA-seq, 
+ingle-cell RNA-seq, and spatial transcriptomics workflows 
+with minimal data conversion.
+
+For examples of in-depth transcriptomics analyses using SPAROscore, refer here:
+[Transcriptomics technologies](sparoscore_transcriptomics_technologies.html)
+
+
+For examples of additional options and advanced usage, see:
+[Advanced options](sparoscore_advanced_options.html)

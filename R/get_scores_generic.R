@@ -51,6 +51,10 @@
 #' }
 #' }
 #'
+#' @param prefix Character string to be appended before the headers of the
+#' columns returned scores. Defaults to "".
+#'
+#'
 #' @return
 #' A numeric matrix of SPAROscores.
 #'
@@ -93,7 +97,7 @@
 #' scores <- get_scores(
 #' ranks = rank_results$ranks,
 #' rank_caps = rank_results$rank_caps,
-#' signatures = c("geneA", "geneC")
+#' signatures = c("gene1", "gene3")
 #' )
 #'
 #' # Score multiple signatures
@@ -101,8 +105,8 @@
 #' ranks = rank_results$ranks,
 #' rank_caps = rank_results$rank_caps,
 #' signatures = list(
-#' sigA = c("geneA", "geneC"),
-#' sigB = c("geneB", "geneD")
+#' sigA = c("gene1", "gene3"),
+#' sigB = c("gene2", "gene4", "gene6")
 #' )
 #' )
 #'
@@ -112,7 +116,8 @@ setGeneric("get_scores",
            function(ranks,
                     rank_caps,
                     signatures,
-                    handle_missing_genes = "skip")
+                    handle_missing_genes = "skip",
+                    prefix = "")
                standardGeneric("get_scores"))
 
 
@@ -121,11 +126,12 @@ setGeneric("get_scores",
 # set the method for get_scores() where signatures is a
 # character vector
 setMethod("get_scores",
-          signature('ANY','ANY', 'character', "ANY"),
+          signature(signatures = 'character'),
           function(ranks,
                    rank_caps,
                    signatures,
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               sparoscores <- compute_sparoscores(
@@ -136,8 +142,7 @@ setMethod("get_scores",
 
               # add columnnames
               sparoscores <- as.matrix(sparoscores)
-              colnames(sparoscores) <- "SPAROscore"
-
+              colnames(sparoscores) <- paste0(prefix, "SPAROscore")
               return(sparoscores)
           }
 )
@@ -146,11 +151,12 @@ setMethod("get_scores",
 # set the method for get_scores() where signatures is a
 # named list
 setMethod("get_scores",
-          signature('ANY','ANY', 'list', "ANY"),
+          signature(signatures = 'list'),
           function(ranks,
                    rank_caps,
                    signatures,
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function with vapply
               sparoscores <- vapply(X = signatures,
@@ -163,6 +169,7 @@ setMethod("get_scores",
                                                   handle_missing_genes)
                                           },
                                    FUN.VALUE = numeric(ncol(ranks)))
+              colnames(sparoscores) <- paste0(prefix, colnames(sparoscores))
               return(sparoscores)
           }
 )
@@ -172,11 +179,12 @@ setMethod("get_scores",
 # set the method for get_scores() where signatures is a
 # GeneSet S4 class
 setMethod("get_scores",
-          signature('ANY','ANY', 'GeneSet', "ANY"),
+          signature(signatures = 'GeneSet'),
           function(ranks,
                    rank_caps,
                    signatures,
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               sparoscores <- compute_sparoscores(
@@ -187,7 +195,7 @@ setMethod("get_scores",
 
               # add columnnames after transposing
               sparoscores <- as.matrix(sparoscores)
-              colnames(sparoscores) <- "SPAROscores"
+              colnames(sparoscores) <- paste0(prefix, "SPAROscore")
               return(sparoscores)
           }
 )
@@ -196,11 +204,12 @@ setMethod("get_scores",
 # set the method for get_scores() where signatures is a
 # GeneSetCollection S4 class
 setMethod("get_scores",
-          signature('ANY','ANY', 'GeneSetCollection', "ANY"),
+          signature(signatures = 'GeneSetCollection'),
           function(ranks,
                    rank_caps,
                    signatures,
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function with vapp
               sparoscores <- vapply(X = GSEABase::geneIds(signatures),
@@ -213,7 +222,7 @@ setMethod("get_scores",
                                                 handle_missing_genes)
                                     },
                                     FUN.VALUE = numeric(ncol(ranks)))
-              colnames(sparoscores) <- names(signatures)
+              colnames(sparoscores) <- paste0(prefix, colnames(sparoscores))
               return(sparoscores)
           }
 )

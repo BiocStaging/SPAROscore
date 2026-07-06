@@ -274,7 +274,8 @@ setGeneric("sparoscore",
                     count_caps = NULL,
                     rank_caps = NULL,
                     handle_ties = "min",
-                    handle_missing_genes = "skip")
+                    handle_missing_genes = "skip",
+                    prefix = "")
                standardGeneric("sparoscore"))
 
 
@@ -289,7 +290,8 @@ setMethod("sparoscore",
                    count_caps = NULL,
                    rank_caps = NULL,
                    handle_ties = "min",
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               sparoscores <- augment_sparoscores_matrix(
@@ -299,7 +301,8 @@ setMethod("sparoscore",
                   count_caps = count_caps,
                   rank_caps = rank_caps,
                   handle_ties = handle_ties,
-                  handle_missing_genes = handle_missing_genes)
+                  handle_missing_genes = handle_missing_genes,
+                  prefix = prefix)
 
               return(sparoscores)
           }
@@ -317,7 +320,8 @@ setMethod("sparoscore",
                    count_caps = NULL,
                    rank_caps = NULL,
                    handle_ties = "min",
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               sparoscores <- augment_sparoscores_matrix(
@@ -327,7 +331,8 @@ setMethod("sparoscore",
                   count_caps = count_caps,
                   rank_caps = rank_caps,
                   handle_ties = handle_ties,
-                  handle_missing_genes = handle_missing_genes)
+                  handle_missing_genes = handle_missing_genes,
+                  prefix = prefix)
 
               return(sparoscores)
           }
@@ -344,7 +349,8 @@ setMethod("sparoscore",
                    count_caps = NULL,
                    rank_caps = NULL,
                    handle_ties = "min",
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               sparoscores <- augment_sparoscores_matrix(
@@ -354,7 +360,8 @@ setMethod("sparoscore",
                   count_caps = count_caps,
                   rank_caps = rank_caps,
                   handle_ties = handle_ties,
-                  handle_missing_genes = handle_missing_genes)
+                  handle_missing_genes = handle_missing_genes,
+                  prefix = prefix)
 
               return(sparoscores)
           }
@@ -372,7 +379,8 @@ setMethod("sparoscore",
                    count_caps = NULL,
                    rank_caps = NULL,
                    handle_ties = "min",
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               sparoscores <- augment_sparoscores_matrix(
@@ -382,7 +390,8 @@ setMethod("sparoscore",
                   count_caps = count_caps,
                   rank_caps = rank_caps,
                   handle_ties = handle_ties,
-                  handle_missing_genes = handle_missing_genes)
+                  handle_missing_genes = handle_missing_genes,
+                  prefix = prefix)
 
               return(sparoscores)
           }
@@ -400,7 +409,8 @@ setMethod("sparoscore",
                    count_caps = NULL,
                    rank_caps = NULL,
                    handle_ties = "min",
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               seurat_object <- augment_sparoscores_seurat(
@@ -412,7 +422,8 @@ setMethod("sparoscore",
                   count_caps = count_caps,
                   rank_caps = rank_caps,
                   handle_ties = handle_ties,
-                  handle_missing_genes = handle_missing_genes)
+                  handle_missing_genes = handle_missing_genes,
+                  prefix = prefix)
 
               return(seurat_object)
           }
@@ -439,7 +450,8 @@ setMethod("sparoscore",
                    count_caps = NULL,
                    rank_caps = NULL,
                    handle_ties = "min",
-                   handle_missing_genes = "skip"){
+                   handle_missing_genes = "skip",
+                   prefix = ""){
 
               #call the helper function
               sce_object <- augment_sparoscores_sce(
@@ -450,7 +462,8 @@ setMethod("sparoscore",
                   count_caps = count_caps,
                   rank_caps = rank_caps,
                   handle_ties = handle_ties,
-                  handle_missing_genes = handle_missing_genes)
+                  handle_missing_genes = handle_missing_genes,
+                  prefix = prefix)
 
               return(sce_object)
           }

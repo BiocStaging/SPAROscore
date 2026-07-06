@@ -614,9 +614,9 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #'
 #'
 compute_sparoscores <- function(ranks,
-                             rank_caps,
-                             signatures,
-                             handle_missing_genes = "skip"){
+                                rank_caps,
+                                signatures,
+                                handle_missing_genes = "skip"){
 
 
     #valide the ranks matrix
@@ -747,6 +747,10 @@ compute_sparoscores <- function(ranks,
 #' rank value.
 #' }
 #'
+#' @param prefix Character string to be appended before the headers of the
+#' returned scores. Defaults to "".
+#'
+#'
 #' @returns A numeric matrix of SPAROscores with one row per column of
 #' matrix_object.
 #'
@@ -792,7 +796,8 @@ augment_sparoscores_matrix <- function(matrix_object,
                                        count_caps = NULL,
                                        rank_caps = NULL,
                                        handle_ties = "min",
-                                       handle_missing_genes = "skip"){
+                                       handle_missing_genes = "skip",
+                                       prefix = ""){
     if(!is.logical(data_has_ranks)){
         stop("SPAROscore says: data_has_ranks should be a boolean")
     }
@@ -806,7 +811,8 @@ augment_sparoscores_matrix <- function(matrix_object,
         sparoscores <- get_scores(ranks = matrix_object,
                                   rank_caps = rank_caps,
                                   signatures = signatures,
-                                  handle_missing_genes = handle_missing_genes)
+                                  handle_missing_genes = handle_missing_genes,
+                                  prefix = prefix)
     }
     # if counts are provides, calculate ranks, rank_caps and then score
     else{
@@ -834,7 +840,8 @@ augment_sparoscores_matrix <- function(matrix_object,
         sparoscores <- get_scores(ranks = ranks_output$ranks,
                                   rank_caps = rank_caps,
                                   signatures = signatures,
-                                  handle_missing_genes = handle_missing_genes)
+                                  handle_missing_genes = handle_missing_genes,
+                                  prefix = prefix)
     }
 
     return(sparoscores)
@@ -871,7 +878,7 @@ augment_sparoscores_matrix <- function(matrix_object,
 #' ranks.
 #'
 #'
-#'#' @param data_has_ranks Logical indicating whether previously
+#' @param data_has_ranks Logical indicating whether previously
 #' calculated ranks are stored in the assay/layer.
 #' If TRUE, ranks are read directly from the assay layer.
 #' If FALSE (default), ranks are computed from counts data in the assay layer.
@@ -913,6 +920,10 @@ augment_sparoscores_matrix <- function(matrix_object,
 #' \item "impute": include missing genes by assigning them the capped
 #' rank value.
 #' }
+#'
+#' @param prefix Character string to be appended before the headers of the
+#' columns in the metada with the returned scores and rank_caps. Defaults to "".
+#'
 #'
 #' @return A Seurat object with:
 #' \itemize{
@@ -973,7 +984,8 @@ augment_sparoscores_seurat <- function(seurat_object,
                                        count_caps = NULL,
                                        rank_caps = NULL,
                                        handle_ties = "min",
-                                       handle_missing_genes = "skip"){
+                                       handle_missing_genes = "skip",
+                                       prefix = ""){
 
 
     if(!is.logical(data_has_ranks)){
@@ -1006,10 +1018,10 @@ augment_sparoscores_seurat <- function(seurat_object,
 
 
         sparoscores <- get_scores(ranks =  ranks,
-                                       rank_caps = rank_caps,
-                                       signatures =  signatures,
-                                       handle_missing_genes =
-                                           handle_missing_genes)
+                                rank_caps = rank_caps,
+                                signatures =  signatures,
+                                handle_missing_genes = handle_missing_genes,
+                                prefix = prefix)
     }
     else{
         #extract count matrix from data
@@ -1045,10 +1057,10 @@ augment_sparoscores_seurat <- function(seurat_object,
 
 
         sparoscores <- get_scores(ranks =  ranks,
-                                       rank_caps = rank_caps,
-                                       signatures =  signatures,
-                                       handle_missing_genes =
-                                           handle_missing_genes)
+                                rank_caps = rank_caps,
+                                signatures =  signatures,
+                                handle_missing_genes = handle_missing_genes,
+                                prefix = prefix)
 
         # store the ranks in new layer named ranks
         seurat_object <- Seurat::SetAssayData(object = seurat_object,
@@ -1061,7 +1073,7 @@ augment_sparoscores_seurat <- function(seurat_object,
 
     # append the rank_caps and sparoscores to metadata
     sparoscores_df <- data.frame(rank_caps)
-    colnames(sparoscores_df) <- "rank_caps"
+    colnames(sparoscores_df) <- paste0(prefix, "rank_caps")
 
     sparoscores_df <- cbind(sparoscores_df, sparoscores)
 
@@ -1132,6 +1144,10 @@ augment_sparoscores_seurat <- function(seurat_object,
 #' them in score calculation.
 #' }
 #'
+#' @param prefix Character string to be appended before the headers of the
+#' columns in colData with returned scores and rank_caps. Defaults to "".
+#'
+#'
 #' @return The input object with:
 #' \itemize{
 #' \item One or more SPAROscore columns added to colData().
@@ -1188,7 +1204,8 @@ augment_sparoscores_sce <- function(sce_object,
                                        count_caps = NULL,
                                        rank_caps = NULL,
                                        handle_ties = "min",
-                                       handle_missing_genes = "skip"){
+                                       handle_missing_genes = "skip",
+                                       prefix = ""){
 
 
     if(!is.logical(data_has_ranks)){
@@ -1222,8 +1239,8 @@ augment_sparoscores_sce <- function(sce_object,
         sparoscores <- get_scores(ranks =  ranks,
                                   rank_caps = rank_caps,
                                   signatures =  signatures,
-                                  handle_missing_genes =
-                                      handle_missing_genes)
+                                  handle_missing_genes = handle_missing_genes,
+                                  prefix = prefix)
     }
     else{
         #extract count matrix from data
@@ -1259,8 +1276,8 @@ augment_sparoscores_sce <- function(sce_object,
         sparoscores <- get_scores(ranks =  ranks,
                                   rank_caps = rank_caps,
                                   signatures =  signatures,
-                                  handle_missing_genes =
-                                      handle_missing_genes)
+                                  handle_missing_genes = handle_missing_genes,
+                                  prefix = prefix)
 
         # store the ranks in new assay named ranks
         SummarizedExperiment::assay(sce_object, "ranks") <- ranks
@@ -1270,7 +1287,7 @@ augment_sparoscores_sce <- function(sce_object,
 
     # append the rank_caps and sparoscores to metadata
     sparoscores_df <- data.frame(rank_caps)
-    colnames(sparoscores_df) <- "rank_caps"
+    colnames(sparoscores_df) <- paste0(prefix, "rank_caps")
 
     sparoscores_df <- cbind(sparoscores_df, sparoscores)
 
