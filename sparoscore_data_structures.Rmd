@@ -294,17 +294,28 @@ airway_seurat <- CreateSeuratObject(
 # view the metadata of the object pre-scoring
 airway_seurat[[]]
 
-# view all the 
+# view all the layers in the object pre-scoring
+Layers(airway_seurat[["RNA"]])
 
 # compute scores for a SummarizedExperiment object
 airway_seurat <- sparoscore(data = airway_seurat,
-                    signatures = gene_signatures,
                     assay = "RNA",
-                    layer = "counts")
+                    layer = "counts",
+                    signatures = gene_signatures)
 
 
 # view the metadata of the object post-scoring
 airway_seurat[[]]
+
+# view all the layers in the object post-scoring
+Layers(airway_seurat[["RNA"]])
+
+# the pre-calculated ranks can be used for scoring to reduce runtimes
+airway_seurat <- sparoscore(data = airway_seurat,
+                            data_has_ranks = TRUE,
+                            assay = "RNA",
+                            layer = "ranks",
+                            signatures = gene_signatures)
 ```
 
 SPAROscore accepts a broad range of matrix-like objects, Bioconductor containers, and gene signature representations without requiring manual conversion. This flexibility allows the package to integrate naturally into existing bulk RNA-seq, single-cell RNA-seq, and spatial transcriptomics workflows.
