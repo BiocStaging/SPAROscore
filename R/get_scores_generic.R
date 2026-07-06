@@ -37,6 +37,16 @@
 #' Gene identifiers must use the same naming convention as the row names of
 #' ranks.
 #'
+#'
+#' @param down_signatures Gene signature(s) to be considered for scoring
+#'  the down-regulation effect. Supported inputs are same as signatures.
+#'  If provided, names(down_signatures) must match names(signatures).
+#'  Defaults to NULL.
+#'
+#' When down_signatures is not NULL,
+#' Final Score = Score(signatures) - Score(down_signatures)
+#'
+#'
 #' @param handle_missing_genes Character string specifying how signature genes
 #' absent from ranks should be handled.
 #'
@@ -116,6 +126,7 @@ setGeneric("get_scores",
            function(ranks,
                     rank_caps,
                     signatures,
+                    down_signatures = NULL,
                     handle_missing_genes = "skip",
                     prefix = "")
                standardGeneric("get_scores"))
@@ -130,19 +141,59 @@ setMethod("get_scores",
           function(ranks,
                    rank_caps,
                    signatures,
+                   down_signatures = NULL,
                    handle_missing_genes = "skip",
                    prefix = ""){
 
               #call the helper function
               sparoscores <- compute_sparoscores(
-                  ranks,
-                  rank_caps,
-                  signatures,
+                  ranks = ranks,
+                  rank_caps = rank_caps,
+                  signatures = signatures,
                   handle_missing_genes = handle_missing_genes)
 
               # add columnnames
               sparoscores <- as.matrix(sparoscores)
               colnames(sparoscores) <- paste0(prefix, "SPAROscore")
+
+              # calculative down-regulation scores when signature_down is given
+              if(!is.null(down_signatures)){
+
+                  #call the helper function for down-regulation scoring
+                  sparoscores_down <- compute_sparoscores(
+                      ranks = ranks,
+                      rank_caps = rank_caps,
+                      signatures = down_signatures,
+                      handle_missing_genes = handle_missing_genes)
+
+                  # add columnnames for negative scores
+                  sparoscores_down <- as.matrix(sparoscores_down)
+                  colnames(sparoscores_down) <- paste0(prefix,
+                                                       "SPAROscore")
+
+                  # subtract down-regulation scores from original scores
+                  sparoscores = sparoscores - sparoscores_down
+
+                  # codeblock to return both up and down signature scores
+                  # subtract down-regulation scores from original scores
+                  # sparoscores_combined <- sparoscores - sparoscores_down
+                  #
+                  # # alter the columnames of up, down and combined scores
+                  # colnames(sparoscores) <- paste0(colnames(sparoscores),
+                  #                                 "_up")
+                  #
+                  # colnames(sparoscores_down) <- paste0(
+                  #     colnames(sparoscores_down), "_down")
+                  #
+                  # colnames(sparoscores_combined) <- paste0(
+                  #     colnames(sparoscores_combined), "_combined")
+                  #
+                  # # merge up, down and combined scores
+                  # sparoscores = cbind(sparoscores,
+                  #                     sparoscores_down,
+                  #                     sparoscores_combined)
+              }
+
               return(sparoscores)
           }
 )
@@ -155,6 +206,7 @@ setMethod("get_scores",
           function(ranks,
                    rank_caps,
                    signatures,
+                   down_signatures = NULL,
                    handle_missing_genes = "skip",
                    prefix = ""){
 
@@ -162,14 +214,44 @@ setMethod("get_scores",
               sparoscores <- vapply(X = signatures,
                                    FUN = function(x){
                                               compute_sparoscores(
-                                              ranks,
-                                              rank_caps,
-                                              x,
+                                              ranks = ranks,
+                                              rank_caps = rank_caps,
+                                              signatures = x,
                                               handle_missing_genes =
                                                   handle_missing_genes)
                                           },
                                    FUN.VALUE = numeric(ncol(ranks)))
               colnames(sparoscores) <- paste0(prefix, colnames(sparoscores))
+
+              # calculate down regulation scores when signature_down is given
+              if(!is.null(down_signatures)){
+                  # check if the signature names match b/w up and down lists
+                  if(names(signatures) != names(down_signatures)){
+                      stop("SPAROscore says: The names of gene sets in
+                      down_signatures should match that of signatures")
+                  }
+
+                  # call helper function to score down-regulated genes
+                  sparoscores_down <- vapply(X = down_signatures,
+                                        FUN = function(x){
+                                            compute_sparoscores(
+                                                ranks = ranks,
+                                                rank_caps = rank_caps,
+                                                signatures = x,
+                                                handle_missing_genes =
+                                                    handle_missing_genes)
+                                        },
+                                        FUN.VALUE = numeric(ncol(ranks)))
+
+                  # add column names for negative scores
+                  colnames(sparoscores_down) <- paste0(prefix,
+                                                colnames(sparoscores_down))
+
+                  # subtract down-regulation scores from original scores
+                  sparoscores = sparoscores - sparoscores_down
+
+              }
+
               return(sparoscores)
           }
 )
@@ -183,19 +265,47 @@ setMethod("get_scores",
           function(ranks,
                    rank_caps,
                    signatures,
+                   down_signatures = NULL,
                    handle_missing_genes = "skip",
                    prefix = ""){
 
               #call the helper function
               sparoscores <- compute_sparoscores(
-                  ranks,
-                  rank_caps,
-                  GSEABase::geneIds(signatures),
+                  ranks = ranks,
+                  rank_caps = rank_caps,
+                  signatures = GSEABase::geneIds(signatures),
                   handle_missing_genes = handle_missing_genes)
 
-              # add columnnames after transposing
+              # add columnnames from the GeneSet object
               sparoscores <- as.matrix(sparoscores)
-              colnames(sparoscores) <- paste0(prefix, "SPAROscore")
+              colnames(sparoscores) <- paste0(prefix,
+                                              GSEABase::setName(signatures))
+
+              # calculative down-regulation scores when signature_down is given
+              if(!is.null(down_signatures)){
+
+                   # first check if the names of up and down signatures match
+                  if(GSEABase::setName(signatures) !=
+                     GSEABase::setName(down_signatures)){
+                      stop("SPAROscore says: The names of gene sets in
+                      down_signatures should match that of signatures")
+                  }
+
+                  #call the helper function for down-regulation scoring
+                  sparoscores_down <- compute_sparoscores(
+                      ranks = ranks,
+                      rank_caps = rank_caps,
+                      signatures = GSEABase::geneIds(down_signatures),
+                      handle_missing_genes = handle_missing_genes)
+
+                  # add columnnames for negative scores
+                  sparoscores_down <- as.matrix(sparoscores_down)
+                  colnames(sparoscores_down) <- paste0(prefix,
+                                            GSEABase::setName(down_signatures))
+
+                  # subtract down-regulation scores from original scores
+                  sparoscores = sparoscores - sparoscores_down
+              }
               return(sparoscores)
           }
 )
@@ -208,21 +318,52 @@ setMethod("get_scores",
           function(ranks,
                    rank_caps,
                    signatures,
+                   down_signatures = NULL,
                    handle_missing_genes = "skip",
                    prefix = ""){
 
-              #call the helper function with vapp
+              #call the helper function with vapply
               sparoscores <- vapply(X = GSEABase::geneIds(signatures),
                                     FUN = function(x){
                                         compute_sparoscores(
-                                            ranks,
-                                            rank_caps,
-                                            x,
+                                            ranks = ranks,
+                                            rank_caps = rank_caps,
+                                            signatures = x,
                                             handle_missing_genes =
                                                 handle_missing_genes)
                                     },
                                     FUN.VALUE = numeric(ncol(ranks)))
               colnames(sparoscores) <- paste0(prefix, colnames(sparoscores))
+
+              # calculate down regulation scores when signature_down is given
+              if(!is.null(down_signatures)){
+                  # check if the signature names match b/w up and down lists
+                  if(names(signatures) != names(down_signatures)){
+                      stop("SPAROscore says: The names of gene sets in
+                      down_signatures should match that of signatures")
+                  }
+
+                  # call helper function to score down-regulated genes
+                  sparoscores_down <- vapply(
+                      X = GSEABase::geneIds(down_signatures),
+                     FUN = function(x){
+                         compute_sparoscores(
+                             ranks = ranks,
+                             rank_caps = rank_caps,
+                             signatures = x,
+                             handle_missing_genes =
+                                 handle_missing_genes)
+                     },
+                     FUN.VALUE = numeric(ncol(ranks)))
+
+                  # add column names for negative scores
+                  colnames(sparoscores_down) <- paste0(prefix,
+                                                colnames(sparoscores_down))
+
+                  # subtract down-regulation scores from original scores
+                  sparoscores = sparoscores - sparoscores_down
+
+              }
               return(sparoscores)
           }
 )

@@ -7,6 +7,7 @@
 sparoscore(
   data,
   signatures,
+  down_signatures = NULL,
   data_has_ranks = FALSE,
   assay = "RNA",
   layer = "count",
@@ -40,6 +41,14 @@ Supported inputs include:
   \item A `GeneSet` object.
   \item A `GeneSetCollection` object.
 }}
+
+\item{down_signatures}{Gene signature(s) to be considered for scoring
+ the down-regulation effect. Supported inputs are same as signatures.
+ If provided, names(down_signatures) must match names(signatures).
+ Defaults to NULL.
+
+When down_signatures is not NULL,
+Final Score = Score(signatures) - Score(down_signatures)}
 
 \item{data_has_ranks}{Logical indicating whether the supplied data already
 contains feature ranks. If `FALSE` (default), ranks are computed from
