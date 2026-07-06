@@ -54,9 +54,9 @@ validate_signature <- function(signature, all_genes){
     invalid_genes <- signature[!(signature %in% all_genes)]
 
     if(length(invalid_genes) > 0){
-        warning(paste0("The following ", length(invalid_genes),
+        warning(paste0("SPAROscore says: The following ", length(invalid_genes),
                        " signature genes are missing in the input dataset: ",
-                       paste0(invalid_genes, collapse = ", ")))
+                       paste0(invalid_genes, collapse = ", ")), call. = FALSE)
     }
 
     if(length(valid_signature) == 0){
@@ -574,7 +574,7 @@ compute_sparoscore_per_cell <- function(signature_ranks_vector, rank_cap,
 #'
 #'
 #' @return A named numeric vector of SPAROscores, with one score per column of
-#' ranks.
+#' the ranks matrix.
 #'
 #'
 #' @details
@@ -651,7 +651,7 @@ compute_sparoscores <- function(ranks,
         rank_caps <- rank_caps
     }
     else{
-        stop("SPAROscore says: Invalid number of ranks provided")
+        stop("SPAROscore says: Invalid number of rank caps provided")
     }
 
     #validate ranks caps' names

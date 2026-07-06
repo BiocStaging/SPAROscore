@@ -25,9 +25,11 @@ Imports:
     sparseMatrixStats
 Suggests: 
     airway,
+    dplyr,
     ggplot2,
     GSEABase,
     knitr,
+    msigdbr,
     rmarkdown,
     Seurat,
     SingleCellExperiment,
