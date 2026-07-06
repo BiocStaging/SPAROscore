@@ -717,6 +717,15 @@ compute_sparoscores <- function(ranks,
 #' Gene identifiers must match the row names of matrix_object.
 #'
 #'
+#' @param down_signatures Gene signature(s) to be considered for scoring
+#'  the down-regulation effect. Supported inputs are same as signatures.
+#'  If provided, names(down_signatures) must match names(signatures).
+#'  Defaults to NULL.
+#'
+#' When down_signatures is not NULL,
+#' Final Score = Score(signatures) - Score(down_signatures)
+#'
+#'
 #' @param data_has_ranks Logical indicating whether matrix_object contains
 #' pre-computed ranks. If TRUE, SPAROscores are computed directly from the
 #' supplied ranks. If FALSE (default), ranks are first computed from the
@@ -792,6 +801,7 @@ compute_sparoscores <- function(ranks,
 #'
 augment_sparoscores_matrix <- function(matrix_object,
                                        signatures,
+                                       down_signatures = NULL,
                                        data_has_ranks = FALSE,
                                        count_caps = NULL,
                                        rank_caps = NULL,
@@ -811,6 +821,7 @@ augment_sparoscores_matrix <- function(matrix_object,
         sparoscores <- get_scores(ranks = matrix_object,
                                   rank_caps = rank_caps,
                                   signatures = signatures,
+                                  down_signatures = down_signatures,
                                   handle_missing_genes = handle_missing_genes,
                                   prefix = prefix)
     }
@@ -840,6 +851,7 @@ augment_sparoscores_matrix <- function(matrix_object,
         sparoscores <- get_scores(ranks = ranks_output$ranks,
                                   rank_caps = rank_caps,
                                   signatures = signatures,
+                                  down_signatures = down_signatures,
                                   handle_missing_genes = handle_missing_genes,
                                   prefix = prefix)
     }
@@ -876,6 +888,14 @@ augment_sparoscores_matrix <- function(matrix_object,
 #'
 #'#' Gene identifiers must use the same naming convention as the row names of
 #' ranks.
+#'
+#' @param down_signatures Gene signature(s) to be considered for scoring
+#'  the down-regulation effect. Supported inputs are same as signatures.
+#'  If provided, names(down_signatures) must match names(signatures).
+#'  Defaults to NULL.
+#'
+#' When down_signatures is not NULL,
+#' Final Score = Score(signatures) - Score(down_signatures)
 #'
 #'
 #' @param data_has_ranks Logical indicating whether previously
@@ -978,6 +998,7 @@ augment_sparoscores_matrix <- function(matrix_object,
 #'
 augment_sparoscores_seurat <- function(seurat_object,
                                        signatures,
+                                       down_signatures = NULL,
                                        data_has_ranks = FALSE,
                                        assay = "RNA",
                                        layer = "count",
@@ -1020,6 +1041,7 @@ augment_sparoscores_seurat <- function(seurat_object,
         sparoscores <- get_scores(ranks =  ranks,
                                 rank_caps = rank_caps,
                                 signatures =  signatures,
+                                down_signatures = down_signatures,
                                 handle_missing_genes = handle_missing_genes,
                                 prefix = prefix)
     }
@@ -1059,6 +1081,7 @@ augment_sparoscores_seurat <- function(seurat_object,
         sparoscores <- get_scores(ranks =  ranks,
                                 rank_caps = rank_caps,
                                 signatures =  signatures,
+                                down_signatures = down_signatures,
                                 handle_missing_genes = handle_missing_genes,
                                 prefix = prefix)
 
@@ -1113,6 +1136,15 @@ augment_sparoscores_seurat <- function(seurat_object,
 #'
 #' Gene identifiers must use the same naming convention as the row names of
 #' ranks.
+#'
+#' @param down_signatures Gene signature(s) to be considered for scoring
+#'  the down-regulation effect. Supported inputs are same as signatures.
+#'  If provided, names(down_signatures) must match names(signatures).
+#'  Defaults to NULL.
+#'
+#' When down_signatures is not NULL,
+#' Final Score = Score(signatures) - Score(down_signatures)
+#'
 #'
 #' @param data_has_ranks Logical indicating whether the specified assay already
 #' contains feature ranks. If TRUE, ranks are read directly from the assay.
@@ -1198,14 +1230,15 @@ augment_sparoscores_seurat <- function(seurat_object,
 #'
 #'
 augment_sparoscores_sce <- function(sce_object,
-                                       signatures,
-                                       data_has_ranks = FALSE,
-                                       assay = "counts",
-                                       count_caps = NULL,
-                                       rank_caps = NULL,
-                                       handle_ties = "min",
-                                       handle_missing_genes = "skip",
-                                       prefix = ""){
+                                    signatures,
+                                    down_signatures = NULL,
+                                    data_has_ranks = FALSE,
+                                    assay = "counts",
+                                    count_caps = NULL,
+                                    rank_caps = NULL,
+                                    handle_ties = "min",
+                                    handle_missing_genes = "skip",
+                                    prefix = ""){
 
 
     if(!is.logical(data_has_ranks)){
@@ -1239,6 +1272,7 @@ augment_sparoscores_sce <- function(sce_object,
         sparoscores <- get_scores(ranks =  ranks,
                                   rank_caps = rank_caps,
                                   signatures =  signatures,
+                                  down_signatures = down_signatures,
                                   handle_missing_genes = handle_missing_genes,
                                   prefix = prefix)
     }
@@ -1276,6 +1310,7 @@ augment_sparoscores_sce <- function(sce_object,
         sparoscores <- get_scores(ranks =  ranks,
                                   rank_caps = rank_caps,
                                   signatures =  signatures,
+                                  down_signatures = down_signatures,
                                   handle_missing_genes = handle_missing_genes,
                                   prefix = prefix)
 

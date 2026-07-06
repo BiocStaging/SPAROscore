@@ -8,6 +8,7 @@ get_scores(
   ranks,
   rank_caps,
   signatures,
+  down_signatures = NULL,
   handle_missing_genes = "skip",
   prefix = ""
 )
@@ -37,6 +38,14 @@ signatures.
 
 Gene identifiers must use the same naming convention as the row names of
 ranks.}
+
+\item{down_signatures}{Gene signature(s) to be considered for scoring
+ the down-regulation effect. Supported inputs are same as signatures.
+ If provided, names(down_signatures) must match names(signatures).
+ Defaults to NULL.
+
+When down_signatures is not NULL,
+Final Score = Score(signatures) - Score(down_signatures)}
 
 \item{handle_missing_genes}{Character string specifying how signature genes
 absent from ranks should be handled.
