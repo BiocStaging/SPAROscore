@@ -2,6 +2,7 @@
 title: "SPAROscore: Getting Started"
 package: SPAROscore
 author: Venkatesh Kamaraj
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{SPAROscore: Getting Started}
@@ -17,7 +18,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, warning=FALSE, message=FALSE}
-# load the necessary librarieslibr
+# load the necessary libraries
 library(SPAROscore)
 library(airway)
 library(ggplot2)
@@ -39,8 +40,9 @@ computes the Spearman footrule distance between the observed ranks of the
 signature genes and a background gene expression rank estimated from the 
 geometric mean expression of the sample, cell, or spatial domain.
 
+
 # How to use SPAROscore?
-To use SPAROscore, at minimum, a gene expression matrix and
+To use SPAROscore, at minimum, a gene expression dataset and
 one or more gene signatures are required. 
 
 To demonstrate this, we will use the gene expression matrix 
@@ -49,10 +51,10 @@ human airway smooth muscle (ASM) cell line samples:
 four treated with dexamethasone and four untreated controls.
 
 As an example gene signature, we use the top differentially expressed genes 
-reported in Himes et al.
+reported in the [original study](https://doi.org/10.1371/journal.pone.0099625).
 
 ## Load the dataset
-```{r, warning=FALSE, message=FALSE}
+```{r}
 # load the airway dataset
 data(airway)
 
@@ -62,6 +64,9 @@ counts_data <- assay(airway)
 # extract the metadata
 metadata <- as.data.frame(colData(airway))
 
+# view sample level dexamethasone treatment status
+metadata[, c("Run", "dex")]
+
 # set the glucocorticoid response markers as the gene signature 
 signature_genes <- c("ENSG00000112936", "ENSG00000170606", "ENSG00000120129", 
                      "ENSG00000152795", "ENSG00000211445", "ENSG00000163884",
@@ -69,10 +74,13 @@ signature_genes <- c("ENSG00000112936", "ENSG00000170606", "ENSG00000120129",
                      "ENSG00000152583", "ENSG00000120658", "ENSG00000157514",
                      "ENSG00000103196", "ENSG00000179094", "ENSG00000152763",
                      "ENSG00000103310", "ENSG00000127954")
+
+# check if the gene ids in the signature match with that of the counts_data
+head(signature_genes %in% rownames(counts_data))
 ```
 
 ## Compute signature scores using SPAROscore
-```{r, results = "markup"}
+```{r}
 scores <- sparoscore(data = counts_data, signatures = signature_genes)
 
 # view the scores
@@ -100,7 +108,7 @@ ggplot(metadata, aes(x = dex, y = scores, fill = dex)) +
 ```
 
 
-# When to use SPAROscore?
+# What transcriptomics technologies can SPAROscore handle?
 SPAROscore can be applied to bulk RNA-seq, single-cell RNA-seq, and 
 spatial transcriptomics data, 
 adapting automatically to differences in data sparsity.
@@ -111,13 +119,32 @@ More information on transcriptomics technologies can be found here:
 # What data structures can SPAROscore handle?
 SPAROscore accepts a wide variety of commonly used data structures, including
 dense matrices, sparse matrices, DelayedArray, SummarizedExperiment, 
-SingleCellExperiment, SpatialExperiment and Seurat objects
+SingleCellExperiment, SpatialExperiment, and Seurat objects.
 
-More information on data structures can be found here:
-[Data structures supported by SPAROscore](sparoscore_data_structures.html)
+When dealing with transcriptomics-specific data structures like Seurat objects
+and SummarizedExperiment-derived objects, SPAROscore appends the scores to the 
+existing metadata, to enhance further analyses.
 
-For additional options and advanced usage, see:
-[Advanced scoring options](sparoscore_advanced_options.html)
+SPAROscore can also handle multiple data structures for the gene signature,
+including character vector, list of character vectors, GeneSet objects and
+GeneSetCollection objects, enabling single and multiple signature scoring.
+
+More information on data structures and example codes can be found here:
+[Data structures](sparoscore_data_structures.html)
+
+# What are some advanced capabilities of SPAROscore?
+The default approximation of background gene expression with 
+the geometric averages can be overridden. Users can input custom values 
+to be used for background expression. 
+
+Custom rank caps can be used by the user to fine-tune the dynamic rank capping
+strategy. Static rank capping can also be imposed by the user if required.
+
+As gene rankings is a compute-intensive step, SPAROscore allows for storage of 
+gene ranking for future scoring tasks.
+
+For examples of additional options and advanced usage, see:
+[Advanced options](sparoscore_advanced_options.html)
 
 
 ```{r}

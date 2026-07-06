@@ -73,6 +73,16 @@
 #' @export
 #'
 #' @examples
+#'
+#' #' counts <- matrix(
+#' sample(0:10, 500, replace = TRUE),
+#' nrow = 50,
+#' dimnames = list(
+#'     paste0("gene", 1:50),
+#'     paste0("cell", 1:10)
+#' )
+#' )
+#'
 #' # Compute ranks
 #' rank_results <- get_ranks(counts)
 #'
