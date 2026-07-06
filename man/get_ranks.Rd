@@ -81,7 +81,7 @@ with \code{\link{get_scores}}.
 }
 \examples{
 
-#' counts <- matrix(
+counts <- matrix(
 sample(0:10, 500, replace = TRUE),
 nrow = 50,
 dimnames = list(

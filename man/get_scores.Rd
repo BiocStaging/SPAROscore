@@ -4,7 +4,13 @@
 \alias{get_scores}
 \title{Compute SPAROscores from pre-computed gene ranks}
 \usage{
-get_scores(ranks, rank_caps, signatures, handle_missing_genes = "skip")
+get_scores(
+  ranks,
+  rank_caps,
+  signatures,
+  handle_missing_genes = "skip",
+  prefix = ""
+)
 }
 \arguments{
 \item{ranks}{A numeric matrix of gene ranks named ranks returned by
@@ -45,6 +51,9 @@ Exclude missing genes from score calculation (default).
 Include missing genes by assigning them the capped rank value.
 }
 }}
+
+\item{prefix}{Character string to be appended before the headers of the
+columns returned scores. Defaults to "".}
 }
 \value{
 A numeric matrix of SPAROscores.
@@ -100,7 +109,7 @@ rank_results <- get_ranks(counts)
 scores <- get_scores(
 ranks = rank_results$ranks,
 rank_caps = rank_results$rank_caps,
-signatures = c("geneA", "geneC")
+signatures = c("gene1", "gene3")
 )
 
 # Score multiple signatures
@@ -108,8 +117,8 @@ scores <- get_scores(
 ranks = rank_results$ranks,
 rank_caps = rank_results$rank_caps,
 signatures = list(
-sigA = c("geneA", "geneC"),
-sigB = c("geneB", "geneD")
+sigA = c("gene1", "gene3"),
+sigB = c("gene2", "gene4", "gene6")
 )
 )
 
