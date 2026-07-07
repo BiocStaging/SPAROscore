@@ -62,7 +62,7 @@ Include missing genes by assigning them the capped rank value.
 }}
 
 \item{prefix}{Character string to be appended before the headers of the
-columns returned scores. Defaults to "".}
+columns returning scores. Defaults to "".}
 }
 \value{
 A numeric matrix of SPAROscores.

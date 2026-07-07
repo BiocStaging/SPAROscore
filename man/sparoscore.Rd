@@ -112,6 +112,9 @@ Exclude missing genes from score calculation (default).
 Include missing genes by assigning them the capped rank value.
 }
 }}
+
+\item{prefix}{Character string to be appended before the headers of the
+columns returning scores. Defaults to "".}
 }
 \value{
 Method-dependent:

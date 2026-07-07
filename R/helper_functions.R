@@ -1096,7 +1096,7 @@ augment_sparoscores_seurat <- function(seurat_object,
 
     # append the rank_caps and sparoscores to metadata
     sparoscores_df <- data.frame(rank_caps)
-    colnames(sparoscores_df) <- paste0(prefix, "rank_caps")
+    colnames(sparoscores_df) <- "rank_caps"
 
     sparoscores_df <- cbind(sparoscores_df, sparoscores)
 
@@ -1177,7 +1177,7 @@ augment_sparoscores_seurat <- function(seurat_object,
 #' }
 #'
 #' @param prefix Character string to be appended before the headers of the
-#' columns in colData with returned scores and rank_caps. Defaults to "".
+#' columns in colData with returned scores. Defaults to "".
 #'
 #'
 #' @return The input object with:
@@ -1322,7 +1322,7 @@ augment_sparoscores_sce <- function(sce_object,
 
     # append the rank_caps and sparoscores to metadata
     sparoscores_df <- data.frame(rank_caps)
-    colnames(sparoscores_df) <- paste0(prefix, "rank_caps")
+    colnames(sparoscores_df) <- "rank_caps"
 
     sparoscores_df <- cbind(sparoscores_df, sparoscores)
 
