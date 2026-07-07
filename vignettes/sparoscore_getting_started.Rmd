@@ -13,7 +13,10 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 10,
+  fig.height = 8, 
+  out.width = "100%" 
 )
 ```
 
@@ -54,6 +57,10 @@ As an example gene signature, we use the top differentially expressed genes
 reported in the [original study](https://doi.org/10.1371/journal.pone.0099625).
 
 ## Load the dataset
+
+The expression matrix contains genes in rows and samples in columns. 
+The accompanying metadata indicates whether each sample received dexamethasone 
+treatment (trt) or served as an untreated control (untrt).
 ```{r}
 # load the airway dataset
 data(airway)
@@ -89,21 +96,20 @@ scores
 
 
 ## Visualise the results
-Because the selected signature consists of glucocorticoid response markers, 
-dexamethasone-treated ASM cell lines are expected to exhibit higher signature 
-scores than untreated controls.
+Since dexamethasone activates glucocorticoid signalling, treated samples are 
+expected to exhibit higher glucocorticoid response scores than untreated 
+controls.
 ```{r}
 # add the signature scores to the metadata
-metadata$scores <- scores[, 1]
+metadata$SPAROscore <- scores[, 1]
 
 # plot results
-ggplot(metadata, aes(x = dex, y = scores, fill = dex)) +
-    geom_boxplot() +
-    geom_jitter(width = 0.05) +
-    xlab("Dexamethasone treatment status") +
+ggplot(metadata, aes(x = dex, y = SPAROscore, fill = dex)) +
+    geom_boxplot(width = 0.6, outlier.shape = NA) +
+    geom_jitter(width = 0.12, size = 3) +
+    xlab("Treatment") +
     ylab("SPAROscore")+
-    ggtitle("SPAROscore signature scores", 
-            subtitle = "Stratified by treatment")+
+    ggtitle("Glucocorticoid response signature activity")+
     theme_classic()
 ```
 

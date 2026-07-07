@@ -26,11 +26,13 @@ Imports:
 Suggests: 
     airway,
     dplyr,
+    edgeR,
     ggplot2,
     GSEABase,
     knitr,
     msigdbr,
     rmarkdown,
+    scater,
     Seurat,
     SingleCellExperiment,
     SpatialExperiment,

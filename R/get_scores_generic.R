@@ -38,15 +38,6 @@
 #' ranks.
 #'
 #'
-#' @param down_signatures Gene signature(s) to be considered for scoring
-#'  the down-regulation effect. Supported inputs are same as signatures.
-#'  If provided, names(down_signatures) must match names(signatures).
-#'  Defaults to NULL.
-#'
-#' When down_signatures is not NULL,
-#' Final Score = Score(signatures) - Score(down_signatures)
-#'
-#'
 #' @param handle_missing_genes Character string specifying how signature genes
 #' absent from ranks should be handled.
 #'
@@ -61,8 +52,18 @@
 #' }
 #' }
 #'
+#'
+#' @param down_signatures Gene signature(s) to be considered for scoring
+#'  the down-regulation effect. Supported inputs are same as signatures.
+#'  If provided, names(down_signatures) must match names(signatures).
+#'  Defaults to NULL.
+#'
+#' When down_signatures is not NULL,
+#' Final Score = Score(signatures) - Score(down_signatures)
+#'
+#'
 #' @param prefix Character string to be appended before the headers of the
-#' columns returned scores. Defaults to "".
+#' columns returning scores. Defaults to "".
 #'
 #'
 #' @return

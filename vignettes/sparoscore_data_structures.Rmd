@@ -13,7 +13,10 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 12,
+  fig.height = 6, 
+  out.width = "100%" 
 )
 ```
 
@@ -35,9 +38,9 @@ library(scater)
 SPAROscore is designed to integrate seamlessly with data structures commonly
 used in bulk, single-cell, and spatial RNA-seq analysis workflows. 
 Rather than requiring users to convert their data into a specific format, 
-SPAROscore accepts a range of gene expression and gene signature data structures. 
-This vignette demonstrates the supported input formats and illustrates 
-how the output adapts to each input type.
+SPAROscore accepts a range of gene expression and gene signature 
+data structures. This vignette demonstrates the supported input formats 
+and illustrates how the output adapts to each input type.
 
 
 * For gene expression input, the following data structures are supported
@@ -90,7 +93,8 @@ In this vignette, we will demonstrate the data structure handling capabilities
 of  SPAROscore using the example dataset from the `airway` package. For the
 gene signatures, we will use the top differentially expressed genes 
 reported in the [original study](https://doi.org/10.1371/journal.pone.0099625), 
-as well as the hallmark inflammatory response genes taken from the MSigDB.
+as well as the hallmark inflammatory response genes taken from the 
+Molecular Signatures Database (MSigDB).
 
 ## Load the gene expression dataset
 ```{r}
@@ -359,3 +363,7 @@ For examples of in-depth transcriptomics analyses using SPAROscore, refer here:
 
 For examples of additional options and advanced usage, see:
 [Advanced options](sparoscore_advanced_options.html)
+
+```{r}
+sessionInfo()
+```
