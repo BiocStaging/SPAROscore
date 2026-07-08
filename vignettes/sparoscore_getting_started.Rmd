@@ -143,7 +143,7 @@ The default approximation of background gene expression with
 the geometric averages can be overridden. Users can input custom values 
 to be used for background expression. 
 
-Custom rank caps can be used by the user to fine-tune the dynamic rank capping
+Custom rank caps can be used by the user to fine-tune the adaptive rank capping
 strategy. Static rank capping can also be imposed by the user if required.
 
 As gene rankings is a compute-intensive step, SPAROscore allows for storage of 

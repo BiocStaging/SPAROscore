@@ -751,8 +751,8 @@ see the Data Structures vignette:
 [Data structures](sparoscore_data_structures.html)
 
 A subsequent vignette, on advanced usage, describes additional functionality 
-including usage of custom caps to fine tune the dynamic rank capping strategy of
-SPAROscore, performance optimisation, tertiary parameter tuning,
+including usage of custom caps to fine tune the adaptive rank capping strategy 
+of SPAROscore, performance optimisation, tertiary parameter tuning,
 and advanced scoring options for specialised analysis workflows. The advance 
 usage vignette can be found here: 
 [Advanced options](sparoscore_advanced_options.html)
