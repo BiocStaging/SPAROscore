@@ -28,8 +28,12 @@ library(airway)
 library(ggplot2)
 library(dplyr)
 library(edgeR)
+library(Seurat)
 library(SeuratData)
 library(msigdbr)
+library(scater)
+library(spatialLIBD)
+library(ggspavis)
 ```
 
 # Introduction
@@ -199,7 +203,7 @@ bulk_dge <- bulk_dge[bulk_keep, keep.lib.sizes = FALSE]
 bulk_dge <- calcNormFactors(bulk_dge)
 
 # Obtain log2 counts per million (logCPM)
-bulk_logCPM <- cpm(bulk_dge, log = TRUE, prior.count=1)
+bulk_logCPM <- edgeR::cpm(bulk_dge, log = TRUE, prior.count=1)
 
 # perform PCA
 bulk_pca_res <- prcomp(t(bulk_logCPM), scale. = TRUE)
@@ -401,7 +405,6 @@ they can be compared across annotated immune cell populations.
 VlnPlot(ifnb,
         features = "IFN_SPAROscore", 
         group.by = "seurat_annotations", 
-        split.by = "stim",
         pt.size = 0, 
         flip = TRUE )
 
@@ -545,7 +548,7 @@ without any modification.
 In such cross-modal analyses, SPAROscore computes biologically interprettable 
 scores that are feasible to be compared and analysed together.
 
-# Summary
+## Summary
 
 This example demonstrates how SPAROscore integrates naturally into a standard 
 single-cell RNA-seq workflow. The computed pathway scores provide an 
@@ -558,3 +561,203 @@ By reducing the expression of an entire gene signature to a single
 quantitative metric, SPAROscore complements conventional scRNA-seq gene analyses 
 and facilitates the exploration of functional heterogeneity in 
 single-cell datasets.
+
+
+
+
+
+# Spatial transcriptomics analysis
+
+Spatial transcriptomics extends conventional RNA sequencing by preserving the 
+spatial locations of transcriptional measurements within intact tissue sections. 
+In addition to quantifying gene expression, spatial transcriptomics enables 
+biological processes to be investigated within their anatomical context, 
+allowing molecular activity to be related directly to tissue morphology 
+and organization.
+
+In this example, the Visium human dorsolateral prefrontal cortex (DLPFC) 
+dataset available through the SpatialLIBD package is used. This dataset was 
+generated using the 10x Genomics Visium platform and comprises multiple 
+human brain sections with manually annotated cortical layers. 
+
+Rather than scoring a signalling pathway, a neuronal gene signature will be 
+quantified. Neurons are abundant throughout the cortical layers but are largely 
+absent from the underlying white matter, which consists primarily of myelinated 
+axons and glial cells. Consequently, neuronal signature scores are expected to 
+be high within the cortex and substantially lower in white matter.
+
+## Load the DLPFC dataset from SpatialLIBD
+
+For computational efficiency, we analyse one representative tissue section.
+
+```{r}
+# load the DLPFC Visium dataset
+dlpfc_spe <- fetch_data(type = "spe")
+
+# check some domain-level metadata present in the object
+head(colData(dlpfc_spe)[,c("sample_id", "spatialLIBD")])
+
+```
+The object is a SpatialExperiment, containing spot-level gene expression counts,
+spatial coordinates, tissue images, and manually annotated cortical layers.
+
+## Visualise the tissue morphology
+```{r}
+# for simplicity of the vignette, work with one sample
+dlpfc_spe <- dlpfc_spe[ , dlpfc_spe$sample_id == "151676"]
+
+# visualise the cortical annotations
+vis_clus(spe = dlpfc_spe, 
+         colors = libd_layer_colors, 
+         clustervar = "spatialLIBD",
+         point_size = 1.5)
+```
+
+## Defining a neuronal gene signature
+
+For demonstration purposes, we use a collection of well-established 
+neuronal marker genes.
+```{r}
+neuron_signature <- c("ENSG00000167281", "ENSG00000132639", "ENSG00000067715", 
+  "ENSG00000104888", "ENSG00000078018", "ENSG00000070808", 
+  "ENSG00000176884", "ENSG00000258947", "ENSG00000277586", 
+  "ENSG00000111674", "ENSG00000104435", "ENSG00000172020", 
+  "ENSG00000008056", "ENSG00000077279", "ENSG00000196361")
+
+# verify if the gene representationas are consistent in signature and data
+head(neuron_signature %in% rownames(dlpfc_spe))
+```
+
+
+## Compute SPAROscore
+
+Since SpatialExperiment objects are supported directly by SPAROscore, 
+pathway scores can be computed without extracting the expression matrix.
+
+```{r}
+dlpfc_spe <- sparoscore(data = dlpfc_spe,
+                        assay = "counts",
+                        signatures = neuron_signature,
+                        prefix = "Neuron_")
+
+# view the scores appended to colData
+head(colData(dlpfc_spe)[,c("sample_id", "spatialLIBD", "Neuron_SPAROscore")])
+```
+The resulting pathway scores are appended to the colData of the 
+SpatialExperiment object, while the computed gene ranks are stored as an 
+additional assay for reuse in subsequent analyses.
+
+
+## Visualising pathway activity across the tissue
+
+One of the major advantages of spatial transcriptomics is the ability to 
+visualise biological processes within their anatomical context.
+
+Using the spot coordinates stored in the SpatialExperiment object, 
+the SPAROscore can be projected directly onto the tissue section.
+
+```{r}
+vis_gene(spe = dlpfc_spe,
+         geneid = "Neuron_SPAROscore",
+         spatial = TRUE,
+         point_size = 1.5)
+```
+High neuronal signature scores are observed throughout the cortical layers, 
+whereas substantially lower scores are evident within the white matter. 
+This agrees with the known cellular composition of the tissue and 
+demonstrates that SPAROscore successfully captures the spatial distribution 
+of neuronal gene expression.
+
+
+## Pathway activity across anatomical regions
+
+The manual annotations for each cortical layer enables 
+quantitative comparison of neuronal pathway activity.
+
+```{r}
+# differentiate white matter from cortex based on annotations
+dlpfc_metadata <- as.data.frame(colData(dlpfc_spe)) %>% 
+            filter(layer_guess != "NA") %>% # remove missing annotations
+            mutate(Region = ifelse(layer_guess == "WM", 
+                   "White_Matter", "Cortex"))
+
+
+dlpfc_metadata %>%
+    ggplot(aes(y = reorder(Region, Neuron_SPAROscore, median),
+           x = Neuron_SPAROscore, 
+           fill = Region)) +
+    geom_violin() +
+    geom_boxplot(width = 0.2, fill = "white") +
+    labs(x = "Neuron SPAROscore",
+         y = "DLPFC Regions",
+         title = "Pathway activity in cortical layers") +
+    scale_fill_manual(values = c("#56B4E9", "#D55E00"))+
+    theme_classic() + 
+    theme(legend.position = "none") 
+```
+The neuronal signature exhibits high scores in the cortical layers but  
+lower scores within the white matter. 
+This observation is consistent with the known neuroanatomy of the cerebral 
+cortex, where neuronal cell bodies are concentrated within the cortical grey 
+matter while the white matter predominantly contains myelinated axons 
+and glial cells.
+
+## Statistical comparison
+
+To further illustrate the difference, neuronal signature scores between cortical 
+spots and white matter can be compared statistically.
+
+```{r}
+wilcox.test(Neuron_SPAROscore ~ Region, data = dlpfc_metadata)
+```
+The significant reduction in neuronal signature scores within white matter 
+provides quantitative evidence that SPAROscore accurately recovers known 
+anatomical organization from spatial transcriptomics data.
+
+
+## Summary
+This example demonstrates how SPAROscore can be integrated directly into 
+spatial transcriptomics analyses. By quantifying a neuronal gene signature, 
+the method successfully distinguishes cortical grey matter from white matter 
+and recovers known tissue architecture using only gene expression information. 
+Such analyses extend naturally to signalling pathways, cell-type signatures and 
+disease-associated gene programmes, providing a flexible framework for 
+investigating biological processes in their spatial context.
+
+
+# Conclusion
+
+This vignette demonstrates how SPAROscore can be integrated into analysis 
+workflows spanning the three major transcriptomics technologies: bulk RNA 
+sequencing, single-cell RNA sequencing, and spatial transcriptomics. 
+
+Although these technologies differ substantially in their data structures and 
+biological resolution, SPAROscore provides a unified framework for quantifying 
+gene signature activity by ranking genes within each sample, cell, 
+or spatial domain.
+
+
+Together, these analyses demonstrate that SPAROscore provides a flexible and 
+scalable approach for pathway-level analysis across diverse transcriptomics 
+applications. By producing interpretable signature scores that are robust to 
+differences in sequencing depth, sparsity, and data modality, SPAROscore enables 
+biologically meaningful comparisons across samples, cells, and spatial domains 
+while integrating naturally into existing Bioconductor and Seurat workflows.
+
+
+For detailed information on the supported input data structures, 
+gene signature representations, and object-specific behaviour, 
+see the Data Structures vignette:
+[Data structures](sparoscore_data_structures.html)
+
+A subsequent vignette, on advanced usage, describes additional functionality 
+including usage of custom caps to fine tune the dynamic rank capping strategy of
+SPAROscore, performance optimisation, tertiary parameter tuning,
+and advanced scoring options for specialised analysis workflows. The advance 
+usage vignette can be found here: 
+[Advanced options](sparoscore_advanced_options.html)
+
+
+```{r}
+sessionInfo()
+```
