@@ -35,7 +35,7 @@ efficiently computed across bulk, single-cell,
 and spatial transcriptomic datasets.
 
 The resulting scores quantify the relative expression of a gene signature 
-compared with the background expression of the same sample/cell/domain, 
+compared with the background expression of each sample/cell/domain, 
 making the scores straightforward to interpret biologically.
 
 Internally, SPAROscore ranks genes within each column and 
@@ -115,11 +115,17 @@ ggplot(metadata, aes(x = dex, y = SPAROscore, fill = dex)) +
 
 
 # What transcriptomics technologies can SPAROscore handle?
-SPAROscore can be applied to bulk RNA-seq, single-cell RNA-seq, and 
-spatial transcriptomics data, 
-adapting automatically to differences in data sparsity.
+SPAROscore is a rank-based gene signature scoring method designed to provide 
+robust signature scores across a wide range of transcriptomics technologies, 
+adapting automatically to the differences in platform-specific
+sequencing depth, expression sparsity, and technical variation.
 
-More information on transcriptomics technologies can be found here: 
+As a result, the same scoring framework of SPAROscore can be applied 
+consistently to bulk RNA sequencing, single-cell RNA sequencing, and spatial 
+transcriptomics data without requiring platform-specific adjustments.
+
+More information on how SPAROscore can be integrated into the analysis workflows
+of different transcriptomics technologies can be found here: 
 [Transcriptomics technologies](sparoscore_transcriptomics_technologies.html)
 
 # What data structures can SPAROscore handle?
@@ -131,7 +137,7 @@ When dealing with transcriptomics-specific data structures like Seurat objects
 and SummarizedExperiment-derived objects, SPAROscore appends the scores to the 
 existing metadata, to enhance further analyses.
 
-SPAROscore can also handle multiple data structures for the gene signature,
+SPAROscore can also handle multiple data structures for the gene signatures,
 including character vector, list of character vectors, GeneSet objects and
 GeneSetCollection objects, enabling single and multiple signature scoring.
 
@@ -139,17 +145,17 @@ More information on data structures and example codes can be found here:
 [Data structures](sparoscore_data_structures.html)
 
 # What are some advanced capabilities of SPAROscore?
-The default approximation of background gene expression with 
-the geometric averages can be overridden. Users can input custom values 
-to be used for background expression. 
+By default, background gene expression is approximated using geometric mean 
+expression values. This approximation can be overridden to accommodate 
+biological contexts in which signature genes are expected to have lower 
+expression. Users may provide custom background expression values to better 
+reflect these conditions and tailor the scoring accordingly. 
 
-Custom rank caps can be used by the user to fine-tune the adaptive rank capping
-strategy. Static rank capping can also be imposed by the user if required.
+Because gene ranking is the most computationally intensive step, SPAROscore 
+supports storing gene rankings for reuse in future scoring analyses. 
+This avoids redundant computations and substantially improves performance.
 
-As gene rankings is a compute-intensive step, SPAROscore allows for storage of 
-gene ranking for future scoring tasks.
-
-For examples of additional options and advanced usage, see:
+For examples of additional options and more advanced usage, see:
 [Advanced options](sparoscore_advanced_options.html)
 
 
