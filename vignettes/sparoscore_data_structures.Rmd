@@ -87,7 +87,7 @@ signature must match those used in the expression data.*
 
 
 
-# Example datasets
+## Example datasets
 
 In this vignette, we will demonstrate the data structure handling capabilities 
 of  SPAROscore using the example dataset from the `airway` package. For the
@@ -96,7 +96,7 @@ reported in the [original study](https://doi.org/10.1371/journal.pone.0099625),
 as well as the hallmark inflammatory response genes taken from the 
 Molecular Signatures Database (MSigDB).
 
-## Load the gene expression dataset
+### Load the gene expression dataset
 ```{r}
 # load the airway dataset
 data(airway)
@@ -108,7 +108,7 @@ counts_data <- assay(airway)
 metadata <- as.data.frame(colData(airway))
 ```
 
-## Load the gene signatures
+### Load the gene signatures
 ```{r}
 # set the glucocorticoid response markers from the original study as a signature 
 response_genes <- c("ENSG00000112936", "ENSG00000170606", "ENSG00000120129", 
@@ -195,7 +195,7 @@ scores_df
 Data frames are internally converted to matrices before ranking 
 because matrix operations are more efficient for this step.
 
-## Verify if the output scores are the same with differing input formats
+### Verify if the output scores are the same with differing input formats
 
 ```{r}
 identical(scores_matrix, scores_sparse)
@@ -323,7 +323,7 @@ airway_seurat[[]]
 # view all the layers in the object pre-scoring
 Layers(airway_seurat[["RNA"]])
 
-# compute scores for a SummarizedExperiment object
+# compute scores for a Seurat object
 airway_seurat <- sparoscore(data = airway_seurat,
                     assay = "RNA",
                     layer = "counts",
