@@ -580,11 +580,11 @@ dataset available through the SpatialLIBD package is used. This dataset was
 generated using the 10x Genomics Visium platform and comprises multiple 
 human brain sections with manually annotated cortical layers. 
 
-Rather than scoring a signalling pathway, a neuronal gene signature will be 
-quantified. Neurons are abundant throughout the cortical layers but are largely 
-absent from the underlying white matter, which consists primarily of myelinated 
-axons and glial cells. Consequently, neuronal signature scores are expected to 
-be high within the cortex and substantially lower in white matter.
+Rather than scoring a signalling pathway, the oligodendrocyte marker gene 
+signature will be quantified. Oligodendrocyte are abundant in the white matter,
+but not abundant in the cortical layers. Consequently, oligodendrocyte signature 
+scores are expected to be high within the white matter and substantially 
+lower in the cortex.
 
 ## Load the DLPFC dataset from SpatialLIBD
 
@@ -604,7 +604,7 @@ spatial coordinates, tissue images, and manually annotated cortical layers.
 ## Visualise the tissue morphology
 ```{r}
 # for simplicity of the vignette, work with one sample
-dlpfc_spe <- dlpfc_spe[ , dlpfc_spe$sample_id == "151676"]
+dlpfc_spe <- dlpfc_spe[ , dlpfc_spe$sample_id == "151675"]
 
 # visualise the cortical annotations
 vis_clus(spe = dlpfc_spe, 
@@ -613,19 +613,21 @@ vis_clus(spe = dlpfc_spe,
          point_size = 1.5)
 ```
 
-## Defining a neuronal gene signature
+## Defining a oligodendrocyte gene signature
 
 For demonstration purposes, we use a collection of well-established 
-neuronal marker genes.
+oligodendrocyte marker genes.
 ```{r}
-neuron_signature <- c("ENSG00000167281", "ENSG00000132639", "ENSG00000067715", 
-  "ENSG00000104888", "ENSG00000078018", "ENSG00000070808", 
-  "ENSG00000176884", "ENSG00000258947", "ENSG00000277586", 
-  "ENSG00000111674", "ENSG00000104435", "ENSG00000172020", 
-  "ENSG00000008056", "ENSG00000077279", "ENSG00000196361")
+oligo_signature <- c(
+  "ENSG00000167748", "ENSG00000166923", "ENSG00000174607", "ENSG00000135678", 
+  "ENSG00000089123", "ENSG00000183018", "ENSG00000129538", "ENSG00000136937", 
+  "ENSG00000105695", "ENSG00000168314", "ENSG00000184113", "ENSG00000124920", 
+  "ENSG00000054274", "ENSG00000122507", "ENSG00000086205", "ENSG00000114867", 
+  "ENSG00000169532", "ENSG00000166292", "ENSG00000141338"
+)
 
 # verify if the gene representationas are consistent in signature and data
-head(neuron_signature %in% rownames(dlpfc_spe))
+head(oligo_signature %in% rownames(dlpfc_spe))
 ```
 
 
@@ -637,11 +639,11 @@ pathway scores can be computed without extracting the expression matrix.
 ```{r}
 dlpfc_spe <- sparoscore(data = dlpfc_spe,
                         assay = "counts",
-                        signatures = neuron_signature,
-                        prefix = "Neuron_")
+                        signatures = oligo_signature,
+                        prefix = "Oligo_")
 
 # view the scores appended to colData
-head(colData(dlpfc_spe)[,c("sample_id", "spatialLIBD", "Neuron_SPAROscore")])
+head(colData(dlpfc_spe)[,c("sample_id", "spatialLIBD", "Oligo_SPAROscore")])
 ```
 The resulting pathway scores are appended to the colData of the 
 SpatialExperiment object, while the computed gene ranks are stored as an 
@@ -658,21 +660,24 @@ the SPAROscore can be projected directly onto the tissue section.
 
 ```{r}
 vis_gene(spe = dlpfc_spe,
-         geneid = "Neuron_SPAROscore",
+         geneid = "Oligo_SPAROscore",
          spatial = TRUE,
          point_size = 1.5)
 ```
-High neuronal signature scores are observed throughout the cortical layers, 
-whereas substantially lower scores are evident within the white matter. 
+Higher oligodendrocyte signature scores are observed throughout the white 
+matter, whereas substantially lower scores (mostly zero) are evident within the 
+cortex layers as illustrated by the colours being empty for most spatial spots
+outside the white matter.
+
 This agrees with the known cellular composition of the tissue and 
 demonstrates that SPAROscore successfully captures the spatial distribution 
-of neuronal gene expression.
+of oligodendrocyte gene expression.
 
 
 ## Pathway activity across anatomical regions
 
 The manual annotations for each cortical layer enables 
-quantitative comparison of neuronal pathway activity.
+quantitative comparison of oligodendrocyte pathway activity.
 
 ```{r}
 # differentiate white matter from cortex based on annotations
@@ -683,43 +688,43 @@ dlpfc_metadata <- as.data.frame(colData(dlpfc_spe)) %>%
 
 
 dlpfc_metadata %>%
-    ggplot(aes(y = reorder(Region, Neuron_SPAROscore, median),
-           x = Neuron_SPAROscore, 
+    ggplot(aes(y = reorder(Region, Oligo_SPAROscore, median),
+           x = Oligo_SPAROscore, 
            fill = Region)) +
-    geom_violin() +
-    geom_boxplot(width = 0.2, fill = "white") +
-    labs(x = "Neuron SPAROscore",
+    geom_boxplot() +
+    labs(x = "Oligo SPAROscore",
          y = "DLPFC Regions",
          title = "Pathway activity in cortical layers") +
     scale_fill_manual(values = c("#56B4E9", "#D55E00"))+
     theme_classic() + 
     theme(legend.position = "none") 
 ```
-The neuronal signature exhibits high scores in the cortical layers but  
-lower scores within the white matter. 
+The oligodendrocyte signature exhibits high scores in the white matter but  
+lower scores within the cortex layers. 
 This observation is consistent with the known neuroanatomy of the cerebral 
-cortex, where neuronal cell bodies are concentrated within the cortical grey 
-matter while the white matter predominantly contains myelinated axons 
-and glial cells.
+cortex, where oligodendrocyte cell bodies are concentrated within the white 
+matter while the cortical grey matter predominantly contains neuronal cells.
 
 ## Statistical comparison
 
-To further illustrate the difference, neuronal signature scores between cortical 
-spots and white matter can be compared statistically.
+To further illustrate the difference, oligodendrocyte signature scores between 
+cortical spots and white matter can be compared statistically.
 
 ```{r}
-wilcox.test(Neuron_SPAROscore ~ Region, data = dlpfc_metadata)
+wilcox.test(Oligo_SPAROscore ~ Region, data = dlpfc_metadata)
 ```
-The significant reduction in neuronal signature scores within white matter 
+The significant reduction in oligodendrocyte signature scores within grey matter 
 provides quantitative evidence that SPAROscore accurately recovers known 
 anatomical organization from spatial transcriptomics data.
 
 
 ## Summary
 This example demonstrates how SPAROscore can be integrated directly into 
-spatial transcriptomics analyses. By quantifying a neuronal gene signature, 
-the method successfully distinguishes cortical grey matter from white matter 
-and recovers known tissue architecture using only gene expression information. 
+spatial transcriptomics analyses. By quantifying a oligodendrocyte gene 
+signature, the method successfully distinguishes cortical grey matter from 
+white matter and recovers known tissue architecture using only gene expression 
+information. 
+
 Such analyses extend naturally to signalling pathways, cell-type signatures and 
 disease-associated gene programmes, providing a flexible framework for 
 investigating biological processes in their spatial context.
@@ -751,8 +756,8 @@ see the Data Structures vignette:
 [Data structures](sparoscore_data_structures.html)
 
 A subsequent vignette, on advanced usage, describes additional functionality 
-including usage of custom caps to fine tune the dynamic rank capping strategy of
-SPAROscore, performance optimisation, tertiary parameter tuning,
+including usage of custom caps to fine tune the adaptive rank capping strategy 
+of SPAROscore, performance optimisation, tertiary parameter tuning,
 and advanced scoring options for specialised analysis workflows. The advance 
 usage vignette can be found here: 
 [Advanced options](sparoscore_advanced_options.html)
