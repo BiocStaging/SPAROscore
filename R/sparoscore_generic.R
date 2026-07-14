@@ -54,7 +54,7 @@
 #' of the assay layer containing the data to use.
 #' When data_has_ranks = FALSE, this layer should contain expression counts.
 #' When data_has_ranks = TRUE, it should contain pre-computed ranks.
-#' Defaults to "count"
+#' Defaults to "counts"
 #' Used only for Seurat objects.
 #'
 #'
@@ -284,7 +284,7 @@ setGeneric("sparoscore",
                     down_signatures = NULL,
                     data_has_ranks = FALSE,
                     assay = "RNA",
-                    layer = "count",
+                    layer = "counts",
                     count_caps = NULL,
                     rank_caps = NULL,
                     handle_ties = "min",
@@ -428,7 +428,7 @@ setMethod("sparoscore",
                    down_signatures = NULL,
                    data_has_ranks = FALSE,
                    assay = "RNA",
-                   layer = "count",
+                   layer = "counts",
                    count_caps = NULL,
                    rank_caps = NULL,
                    handle_ties = "min",
