@@ -2,9 +2,49 @@
 % Please edit documentation in R/get_scores_generic.R
 \name{get_scores}
 \alias{get_scores}
+\alias{get_scores,ANY,ANY,character-method}
+\alias{get_scores,ANY,ANY,list-method}
+\alias{get_scores,ANY,ANY,GeneSet-method}
+\alias{get_scores,ANY,ANY,GeneSetCollection-method}
 \title{Compute SPAROscores from pre-computed gene ranks}
 \usage{
 get_scores(
+  ranks,
+  rank_caps,
+  signatures,
+  down_signatures = NULL,
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{get_scores}{ANY,ANY,character}(
+  ranks,
+  rank_caps,
+  signatures,
+  down_signatures = NULL,
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{get_scores}{ANY,ANY,list}(
+  ranks,
+  rank_caps,
+  signatures,
+  down_signatures = NULL,
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{get_scores}{ANY,ANY,GeneSet}(
+  ranks,
+  rank_caps,
+  signatures,
+  down_signatures = NULL,
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{get_scores}{ANY,ANY,GeneSetCollection}(
   ranks,
   rank_caps,
   signatures,

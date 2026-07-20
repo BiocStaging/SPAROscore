@@ -2,9 +2,37 @@
 % Please edit documentation in R/get_ranks_generic.R
 \name{get_ranks}
 \alias{get_ranks}
+\alias{get_ranks,matrix-method}
+\alias{get_ranks,sparseMatrix-method}
+\alias{get_ranks,DelayedMatrix-method}
+\alias{get_ranks,data.frame-method}
 \title{Compute gene ranks and rank caps for SPAROscore}
 \usage{
 get_ranks(
+  counts,
+  count_caps = compute_geometric_average(counts),
+  handle_ties = "min"
+)
+
+\S4method{get_ranks}{matrix}(
+  counts,
+  count_caps = compute_geometric_average(counts),
+  handle_ties = "min"
+)
+
+\S4method{get_ranks}{sparseMatrix}(
+  counts,
+  count_caps = compute_geometric_average(counts),
+  handle_ties = "min"
+)
+
+\S4method{get_ranks}{DelayedMatrix}(
+  counts,
+  count_caps = compute_geometric_average(counts),
+  handle_ties = "min"
+)
+
+\S4method{get_ranks}{data.frame}(
   counts,
   count_caps = compute_geometric_average(counts),
   handle_ties = "min"
@@ -24,8 +52,7 @@ Supported input classes include:
 
 \item{count_caps}{Optional numeric vector containing count cap values for
 each column. These values are used to determine the corresponding rank
-caps. If NULL, column-wise geometric mean expression values computed by
-\code{\link{compute_geometric_average}} are used.}
+caps. If NULL, column-wise geometric mean expression values are used.}
 
 \item{handle_ties}{Character string specifying how tied expression values
 should be ranked. Passed directly to

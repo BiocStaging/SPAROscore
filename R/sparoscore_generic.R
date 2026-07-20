@@ -143,7 +143,6 @@
 #' @seealso
 #' \code{\link{get_ranks}},
 #' \code{\link{get_scores}},
-#' \code{\link{compute_geometric_average}}
 #'
 #' @export
 #' @details
@@ -172,10 +171,9 @@
 #' assigned the capped rank value and included in score calculation
 #' ("impute").
 #'
-#' For each sample, cell, or spatial domain, SPAROscores are computed using
-#' \code{\link{compute_sparoscores}}, which evaluates the normalized Spearman
-#' footrule distance between observed signature gene ranks and the
-#' column-specific rank cap.
+#' For each sample, cell, or spatial domain, SPAROscores
+#' evaluates the normalized Spearman footrule distance between observed
+#' signature gene ranks and the column-specific rank cap.
 #'
 #' Rank caps typically correspond to the rank of the geometric mean expression
 #' value estimated by \code{\link{get_ranks}}, although custom rank caps
@@ -294,6 +292,9 @@ setGeneric("sparoscore",
 
 
 # set the method for sparoscore() where data is a matrix
+#' Compute SPAROscores for matrix objects
+#' @rdname sparoscore
+#' @export
 setMethod("sparoscore",
           signature(data = 'matrix'),
           function(data,
@@ -326,6 +327,9 @@ setMethod("sparoscore",
 
 
 # set the method for sparoscore() where data is a sparseMatrix
+#' Compute SPAROscores for sparseMatrix objects
+#' @rdname sparoscore
+#' @export
 setMethod("sparoscore",
           signature(data = 'sparseMatrix'),
           function(data,
@@ -357,6 +361,9 @@ setMethod("sparoscore",
 )
 
 # set the method for sparoscore() where data is a DelayedMatrix
+#' Compute SPARO scores for DelayedMatrix objects
+#' @rdname sparoscore
+#' @export
 setMethod("sparoscore",
           signature(data = 'DelayedMatrix'),
           function(data,
@@ -389,6 +396,9 @@ setMethod("sparoscore",
 
 
 # set the method for sparoscore() where data is a data.frame
+#' Compute SPAROscores for data.frame objects
+#' @rdname sparoscore
+#' @export
 setMethod("sparoscore",
           signature(data = 'data.frame'),
           function(data,
@@ -421,6 +431,9 @@ setMethod("sparoscore",
 
 
 # set the method for sparoscore() where data is a Seurat object
+#' Compute SPAROscores for Seurat objects
+#' @rdname sparoscore
+#' @export
 setMethod("sparoscore",
           signature(data = 'Seurat'),
           function(data,
@@ -464,6 +477,10 @@ setMethod("sparoscore",
 
 # set the method for sparoscore() where data is one of the
 # SummarizedExperiment-derived classes
+
+#' Compute SPAROscores for SummarizedExperiment-like objects
+#' @rdname sparoscore
+#' @export
 setMethod("sparoscore",
           signature(data = 'SummarizedExperiment'),
           function(data,

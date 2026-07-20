@@ -2,6 +2,12 @@
 % Please edit documentation in R/sparoscore_generic.R
 \name{sparoscore}
 \alias{sparoscore}
+\alias{sparoscore,matrix-method}
+\alias{sparoscore,sparseMatrix-method}
+\alias{sparoscore,DelayedMatrix-method}
+\alias{sparoscore,data.frame-method}
+\alias{sparoscore,Seurat-method}
+\alias{sparoscore,SummarizedExperiment-method}
 \title{Compute SPAROscores}
 \usage{
 sparoscore(
@@ -11,6 +17,90 @@ sparoscore(
   data_has_ranks = FALSE,
   assay = "RNA",
   layer = "counts",
+  count_caps = NULL,
+  rank_caps = NULL,
+  handle_ties = "min",
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{sparoscore}{matrix}(
+  data,
+  signatures,
+  down_signatures = NULL,
+  data_has_ranks = FALSE,
+  assay = NULL,
+  layer = NULL,
+  count_caps = NULL,
+  rank_caps = NULL,
+  handle_ties = "min",
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{sparoscore}{sparseMatrix}(
+  data,
+  signatures,
+  down_signatures = NULL,
+  data_has_ranks = FALSE,
+  assay = NULL,
+  layer = NULL,
+  count_caps = NULL,
+  rank_caps = NULL,
+  handle_ties = "min",
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{sparoscore}{DelayedMatrix}(
+  data,
+  signatures,
+  down_signatures = NULL,
+  data_has_ranks = FALSE,
+  assay = NULL,
+  layer = NULL,
+  count_caps = NULL,
+  rank_caps = NULL,
+  handle_ties = "min",
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{sparoscore}{data.frame}(
+  data,
+  signatures,
+  down_signatures = NULL,
+  data_has_ranks = FALSE,
+  assay = NULL,
+  layer = NULL,
+  count_caps = NULL,
+  rank_caps = NULL,
+  handle_ties = "min",
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{sparoscore}{Seurat}(
+  data,
+  signatures,
+  down_signatures = NULL,
+  data_has_ranks = FALSE,
+  assay = "RNA",
+  layer = "counts",
+  count_caps = NULL,
+  rank_caps = NULL,
+  handle_ties = "min",
+  handle_missing_genes = "skip",
+  prefix = ""
+)
+
+\S4method{sparoscore}{SummarizedExperiment}(
+  data,
+  signatures,
+  down_signatures = NULL,
+  data_has_ranks = FALSE,
+  assay = "counts",
+  layer = NULL,
   count_caps = NULL,
   rank_caps = NULL,
   handle_ties = "min",
@@ -172,10 +262,9 @@ in ranks. Missing genes can either be excluded from scoring ("skip") or
 assigned the capped rank value and included in score calculation
 ("impute").
 
-For each sample, cell, or spatial domain, SPAROscores are computed using
-\code{\link{compute_sparoscores}}, which evaluates the normalized Spearman
-footrule distance between observed signature gene ranks and the
-column-specific rank cap.
+For each sample, cell, or spatial domain, SPAROscores
+evaluates the normalized Spearman footrule distance between observed
+signature gene ranks and the column-specific rank cap.
 
 Rank caps typically correspond to the rank of the geometric mean expression
 value estimated by \code{\link{get_ranks}}, although custom rank caps
@@ -279,5 +368,4 @@ assay = "ranks"
 \seealso{
 \code{\link{get_ranks}},
 \code{\link{get_scores}},
-\code{\link{compute_geometric_average}}
 }
