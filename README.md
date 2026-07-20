@@ -52,19 +52,3 @@ sce <- sparoscore(data = sce, signatures = signature, assay = "counts")
 -   **Bioconductor**: Full integration with `SummarizedExperiment` and its derived objects like `SingleCellExperiment`, `SpatialExperiment`
 -   **Signatures**: Character vectors, named lists, `GeneSet`, `GeneSetCollection`
 
-## License
-
-GPL-3.0 - See LICENSE file
-
-\<!-- \## Citation
-
-```         
-Kamaraj, V. (2024). SPAROscore: Sparsity-Adaptive Robust Gene Signature Scoring. 
-R package version 0.1.0.
-```
-
-## Contact
-
-**Maintainer**: Venkatesh Kamaraj\
-**Email**: [venkatesh.kamaraj\@adelaide.edu.au](mailto:venkatesh.kamaraj@adelaide.edu.au){.email}\
-**Affiliation**: University of Adelaide -- !\>
