@@ -3,3 +3,6 @@
 export(get_ranks)
 export(get_scores)
 export(sparoscore)
+exportMethods(get_ranks)
+exportMethods(get_scores)
+exportMethods(sparoscore)

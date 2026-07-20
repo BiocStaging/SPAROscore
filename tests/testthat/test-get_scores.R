@@ -133,7 +133,7 @@ test_that("GeneSet method works (if GSEABase available)", {
 
     expect_true(is.matrix(res))
     expect_equal(nrow(res), ncol(obj$ranks))
-    expect_equal(colnames(res), "SPAROscores")
+    expect_equal(colnames(res), setName(gs))
 })
 
 

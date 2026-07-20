@@ -6,13 +6,17 @@ Authors@R: c(
     person(
       "Venkatesh", "Kamaraj",
       email = "venkatesh.kamaraj@adelaide.edu.au",
-      role = c("aut", "cre")
+      role = c("aut", "cre"),
+      comment = c(ORCID = "0009-0008-7309-9810")
     )
   )
-Description: SPAROscore stands for SParsity Aware RObust gene signature score.
-    SPAROscore can effectively obtain gene signature scores from transcriptomics
-    datasets of any sparsity levels including bulk, single-cell and spatial. 
-License: GPL-3.0
+Description: SPAROscore is a gene signature scoring method designed to be 
+    robust across diverse gene expression datasets. SPAROscore adapts to 
+    varying levels of sparsity, allowing signature scores to be efficiently 
+    computed across bulk, single-cell, and spatial transcriptomic datasets.
+biocViews: GeneExpression, SingleCell, Spatial, Transcriptomics, 
+    GeneSetEnrichment, Pathways, Software
+License: GPL-3
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Imports: 
@@ -22,21 +26,28 @@ Imports:
     MatrixGenerics,
     matrixStats,
     methods,
-    sparseMatrixStats
+    sparseMatrixStats,
+    stats
 Suggests: 
     airway,
     dplyr,
     edgeR,
     ggplot2,
+    ggspavis,
     GSEABase,
     knitr,
     msigdbr,
     rmarkdown,
     scater,
     Seurat,
+    SeuratData,
     SingleCellExperiment,
     SpatialExperiment,
+    spatialLIBD,
     SummarizedExperiment,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    tidyr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+URL: https://github.com/MangiolaLaboratory/SPAROscore
+BugReports: https://github.com/MangiolaLaboratory/SPAROscore/issues

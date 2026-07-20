@@ -229,6 +229,7 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #'
 #'
 #' @examples
+#' \dontrun{
 #' counts <- matrix(
 #' c(0, 5, 10,
 #' 2, 0, 20,
@@ -237,7 +238,7 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #' )
 #'
 #' compute_geometric_average(counts)
-#'
+#'}
 #'
 compute_geometric_average <-function(counts){
     message("SPAROscore says: Calculating column-wise geometric averages")
@@ -663,7 +664,7 @@ compute_sparoscores <- function(ranks,
     }
 
     # Calculate sparoscores for each column
-    sparoscores <- setNames(rep(0.0,
+    sparoscores <- stats::setNames(rep(0.0,
                                 ncol(signature_rank_matrix)),
                             colnames(signature_rank_matrix))
 
@@ -915,7 +916,7 @@ augment_sparoscores_matrix <- function(matrix_object,
 #' of the assay layer containing the data to use.
 #' When data_has_ranks = FALSE, this layer should contain expression counts.
 #' When data_has_ranks = TRUE, it should contain pre-computed ranks.
-#' Defaults to "count"
+#' Defaults to "counts"
 #'
 #'
 #' @param count_caps Optional numeric vector of expression values used to
@@ -1001,7 +1002,7 @@ augment_sparoscores_seurat <- function(seurat_object,
                                        down_signatures = NULL,
                                        data_has_ranks = FALSE,
                                        assay = "RNA",
-                                       layer = "count",
+                                       layer = "counts",
                                        count_caps = NULL,
                                        rank_caps = NULL,
                                        handle_ties = "min",

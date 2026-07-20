@@ -135,8 +135,10 @@ setGeneric("get_scores",
 
 
 
-# set the method for get_scores() where signatures is a
-# character vector
+# set the method for get_scores() where signatures is a character vector
+#' Compute scores where signatures is a character vector
+#' @rdname get_scores
+#' @export
 setMethod("get_scores",
           signature(signatures = 'character'),
           function(ranks,
@@ -200,8 +202,10 @@ setMethod("get_scores",
 )
 
 
-# set the method for get_scores() where signatures is a
-# named list
+# set the method for get_scores() where signatures is a named list
+#' Compute scores where signatures is a named list
+#' @rdname get_scores
+#' @export
 setMethod("get_scores",
           signature(signatures = 'list'),
           function(ranks,
@@ -259,8 +263,10 @@ setMethod("get_scores",
 
 
 
-# set the method for get_scores() where signatures is a
-# GeneSet S4 class
+# set the method for get_scores() where signatures is a GeneSet S4 class
+#' Compute scores where signatures is a GeneSet S4 class
+#' @rdname get_scores
+#' @export
 setMethod("get_scores",
           signature(signatures = 'GeneSet'),
           function(ranks,
@@ -312,8 +318,10 @@ setMethod("get_scores",
 )
 
 
-# set the method for get_scores() where signatures is a
-# GeneSetCollection S4 class
+# set the method for get_scores() where signatures is a GeneSetCollection
+#' Compute scores where signatures is a GeneSetCollection S4 class
+#' @rdname get_scores
+#' @export
 setMethod("get_scores",
           signature(signatures = 'GeneSetCollection'),
           function(ranks,

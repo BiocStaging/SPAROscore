@@ -32,8 +32,7 @@
 #'
 #' @param count_caps Optional numeric vector containing count cap values for
 #' each column. These values are used to determine the corresponding rank
-#' caps. If NULL, column-wise geometric mean expression values computed by
-#' \code{\link{compute_geometric_average}} are used.
+#' caps. If NULL, column-wise geometric mean expression values are used.
 #'
 #'
 #' @param handle_ties Character string specifying how tied expression values
@@ -105,6 +104,9 @@ setGeneric("get_ranks",
 
 
 # set the method for get_ranks() where counts is a matrix
+#' Calculate gene ranking from expression data in a matrix
+#' @rdname get_ranks
+#' @export
 setMethod("get_ranks",
           signature('matrix','ANY', 'ANY'),
           function(counts,
@@ -122,6 +124,9 @@ setMethod("get_ranks",
 
 
 # set the method for get_ranks() where counts is a sparseMatrix
+#' Calculate gene ranking from expression data in a sparseMatrix
+#' @rdname get_ranks
+#' @export
 setMethod("get_ranks",
           signature('sparseMatrix','ANY', 'ANY'),
           function(counts,
@@ -139,6 +144,9 @@ setMethod("get_ranks",
 
 
 # set the method for get_ranks() where counts is a DelayedMatrix
+#' Calculate gene ranking from expression data in a DelayedMatrix
+#' @rdname get_ranks
+#' @export
 setMethod("get_ranks",
           signature('DelayedMatrix','ANY', 'ANY'),
           function(counts,
@@ -156,6 +164,9 @@ setMethod("get_ranks",
 
 
 # set the method for get_ranks() where counts is a data.frame
+#' Calculate gene ranking from expression data in a data.frame
+#' @rdname get_ranks
+#' @export
 setMethod("get_ranks",
           signature('data.frame','ANY', 'ANY'),
           function(counts,
