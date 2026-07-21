@@ -6,3 +6,6 @@
 .Rbuildignore
 SPAROscore.Rproj
 inst/doc
+/vignettes/*.html
+/vignettes/*.R
+
