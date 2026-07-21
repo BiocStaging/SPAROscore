@@ -111,7 +111,7 @@
 #'  Defaults to NULL.
 #'
 #' When down_signatures is not NULL,
-#' Final Score = Score(signatures) - Score(down_signatures)
+#' Final Score <- Score(signatures) - Score(down_signatures)
 #'
 #'
 #' @param prefix Character string to be appended before the headers of the
@@ -218,7 +218,7 @@
 #' # Seurat object
 #' # ------------------------------------------------------------------
 #'
-#' \dontrun{
+#' \donttest{
 #' seurat_object <- sparoscore(
 #' data = seurat_object,
 #' signatures = c("CCR7", "IL7R", "LTB")
@@ -257,7 +257,7 @@
 #' # SingleCellExperiment / SummarizedExperiment
 #' # ------------------------------------------------------------------
 #'
-#' \dontrun{
+#' \donttest{
 #' sce <- sparoscore(
 #' data = sce,
 #' signatures = c("CCR7", "IL7R", "LTB")

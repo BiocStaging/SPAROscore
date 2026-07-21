@@ -1,24 +1,26 @@
-Package: SPAROscore
 Type: Package
-Title: A package to compute gene signature scores from transcriptomics data
+Package: SPAROscore
+Title: A package to compute gene signature scores from transcriptomics
+    data
 Version: 0.99.0
-Authors@R: c(
-    person(
-      "Venkatesh", "Kamaraj",
-      email = "venkatesh.kamaraj@adelaide.edu.au",
-      role = c("aut", "cre"),
-      comment = c(ORCID = "0009-0008-7309-9810")
-    )
-  )
-Description: SPAROscore is a gene signature scoring method designed to be 
-    robust across diverse gene expression datasets. SPAROscore adapts to 
-    varying levels of sparsity, allowing signature scores to be efficiently 
-    computed across bulk, single-cell, and spatial transcriptomic datasets.
-biocViews: GeneExpression, SingleCell, Spatial, Transcriptomics, 
-    GeneSetEnrichment, Pathways, Software
+Authors@R: 
+    person("Venkatesh", "Kamaraj", , "venkatesh.kamaraj@adelaide.edu.au", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0008-7309-9810"))
+Description: SPAROscore is a gene signature scoring method designed to be
+    robust across diverse gene expression datasets. SPAROscore adapts to
+    varying levels of sparsity, allowing signature scores to be
+    efficiently computed across bulk, single-cell, and spatial
+    transcriptomic datasets.  The resulting scores quantify the relative
+    expression of a gene signature compared with the background expression
+    of each sample/cell/domain, making the scores straightforward to
+    interpret biologically.  Internally, SPAROscore ranks genes within
+    each column and computes the Spearman footrule distance between the
+    observed ranks of the signature genes and a background gene expression
+    rank estimated from the geometric mean expression of the sample, cell,
+    or spatial domain.
 License: GPL-3
-Encoding: UTF-8
-RoxygenNote: 7.3.3
+URL: https://github.com/MangiolaLaboratory/SPAROscore
+BugReports: https://github.com/MangiolaLaboratory/SPAROscore/issues
 Imports: 
     DelayedArray,
     DelayedMatrixStats,
@@ -37,17 +39,20 @@ Suggests:
     GSEABase,
     knitr,
     msigdbr,
+    muscData,
     rmarkdown,
     scater,
     Seurat,
-    SeuratData,
     SingleCellExperiment,
     SpatialExperiment,
     spatialLIBD,
     SummarizedExperiment,
     testthat (>= 3.0.0),
     tidyr
-VignetteBuilder: knitr
+VignetteBuilder: 
+    knitr
+biocViews: GeneExpression, SingleCell, Spatial, Transcriptomics,
+    GeneSetEnrichment, Pathways, Software
 Config/testthat/edition: 3
-URL: https://github.com/MangiolaLaboratory/SPAROscore
-BugReports: https://github.com/MangiolaLaboratory/SPAROscore/issues
+Encoding: UTF-8
+RoxygenNote: 7.3.3

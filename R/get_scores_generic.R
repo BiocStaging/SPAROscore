@@ -59,7 +59,7 @@
 #'  Defaults to NULL.
 #'
 #' When down_signatures is not NULL,
-#' Final Score = Score(signatures) - Score(down_signatures)
+#' Final Score <- Score(signatures) - Score(down_signatures)
 #'
 #'
 #' @param prefix Character string to be appended before the headers of the
