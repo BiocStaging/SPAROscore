@@ -229,7 +229,7 @@ append_to_matrix_like_object <- function(matrix_like_object, numeric_vector){
 #'
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' counts <- matrix(
 #' c(0, 5, 10,
 #' 2, 0, 20,

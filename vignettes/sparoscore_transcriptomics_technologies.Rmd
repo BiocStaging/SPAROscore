@@ -10,7 +10,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r global-options, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -29,7 +29,7 @@ library(ggplot2)
 library(dplyr)
 library(edgeR)
 library(Seurat)
-library(SeuratData)
+library(muscData)
 library(msigdbr)
 library(scater)
 library(spatialLIBD)
@@ -103,7 +103,7 @@ The expression matrix contains genes in rows and samples in columns.
 The accompanying metadata indicates whether each sample received dexamethasone 
 treatment (trt) or served as an untreated control (untrt).
 
-```{r}
+```{r bulk-1}
 # load the airway dataset
 data(airway)
 
@@ -132,7 +132,7 @@ The number of signature missing from the dataset will also be reported by
 SPAROscore as a warning.
 
 ## Compute SPAROscore
-```{r}
+```{r bulk-2}
 bulk_scores <- sparoscore( data = counts_data, signatures = gc_response_genes) 
 
 bulk_scores
@@ -143,7 +143,7 @@ signature genes have higher expression relative to the background expression
 of the sample, consistent with stronger pathway activation.
 
 ## Combine scores with the sample metadata
-```{r}
+```{r bulk-3}
 metadata$SPAROscore <- bulk_scores[,1]
 
 metadata[, c("Run", "dex", "SPAROscore")]
@@ -157,7 +157,7 @@ Since dexamethasone activates glucocorticoid signalling, treated samples are
 expected to exhibit higher glucocorticoid response scores than untreated 
 controls.
 
-```{r}
+```{r bulk-4}
 metadata %>%
     ggplot(aes(x = dex, y = SPAROscore, fill = dex)) +
     geom_boxplot(width = 0.6, outlier.shape = NA) +
@@ -177,7 +177,7 @@ successfully captures the biological response induced by the treatment.
 The observed difference can be formally evaluated using the non-parametric
 Wilcoxon ranksum test
 
-```{r}
+```{r bulk-5}
 wilcox.test(SPAROscore ~ dex, data = metadata)
 ```
 
@@ -191,7 +191,7 @@ sample-to-sample variation in transcriptomic datasets. By colouring samples
 according to their SPAROscore rather than their treatment group, we can 
 determine whether pathway activity explains the dominant source of variation.
 
-```{r, warning=FALSE}
+```{r bulk-6, warning=FALSE}
 # Create the DGEList object
 bulk_dge <- DGEList(counts = counts_data)
 
@@ -243,7 +243,7 @@ To illustrate this, we compare the SPAROscore with the expression of most
 differentially expressed glucocorticoid response gene (C7) from the 
 [original study](https://doi.org/10.1371/journal.pone.0099625).
 
-```{r}
+```{r bulk-7}
 # assign the top gene from the original study
 top_gene <- "ENSG00000112936"
 
@@ -295,7 +295,8 @@ cell types and experimental conditions to be explored.
 
 In this example, the IFN-β stimulation dataset from 
 [Kang et al.](https://doi.org/10.1038/nbt.4042), which is available through the 
-SeuratData package will be used. The dataset consists of ~14,000 
+muscData package will be used. We will work with a seurat object of the same to 
+showcase the versatality of SPAROscore. The dataset consists of ~29,000 
 peripheral blood mononuclear cells (PBMCs) collected from 
 lupus patients before and after stimulation with interferon-β (IFN-β). 
 
@@ -305,17 +306,22 @@ Although the cells were stimulated with IFN-β, the Hallmark collection contains
 a single canonical type I interferon response signature, which captures the 
 conserved transcriptional response induced by both IFN-α and IFN-β signalling.
 
-## Load the dataset from SeuratData 
+## Load the dataset from muscData 
 
-```{r, warning=FALSE}
-# install the dataset for first-time use
-InstallData("ifnb")
+```{r sc-1, warning=FALSE}
+# load the ifnb data from the muscData library
+ifnb_sce_data <- Kang18_8vs8()
 
-# load the ifnb dataset
-ifnb <- LoadData("ifnb")
+# working with a seurat object
+ifnb <- CreateSeuratObject(
+  counts = counts(ifnb_sce_data), 
+  meta.data = as.data.frame(colData(ifnb_sce_data)),
+  assay = "RNA"
+)
 
 # check the layer in the RNA assay
 Layers(ifnb[["RNA"]])
+#> [1] "counts" "data"
 
 # view the metadata of the ifnb seurat object
 head(ifnb[[]])
@@ -328,7 +334,7 @@ are also given under the `seurat_annotations` metadata column.
 
 ## Load the gene signature from MSigDB
 
-```{r}
+```{r sc-2}
 ifn_signature <- msigdbr( species = "Homo sapiens", collection = "H" ) %>% 
     filter(gs_name == "HALLMARK_INTERFERON_ALPHA_RESPONSE") %>% 
     pull(gene_symbol) %>% 
@@ -342,7 +348,7 @@ head(ifn_signature %in% rownames(ifnb))
 ## Compute SPAROscore
 The interferon-beta response for every cell can be quantified using SPAROscore
 
-```{r}
+```{r sc-3}
 ifnb <- sparoscore(data = ifnb, 
                    assay = "RNA", 
                    layer = "counts", 
@@ -370,7 +376,7 @@ Since interferon signalling is expected to increase following stimulation,
 the distribution of SPAROscore between the two experimental conditions should 
 reflect that.
 
-```{r}
+```{r sc-4}
 VlnPlot(ifnb, 
         features = "IFN_SPAROscore", 
         group.by = "stim", 
@@ -388,7 +394,7 @@ scores than unstimulated controls.
 The difference between the two experimental groups can also be assessed 
 statistically using the non-parametric Wilcoxon ranksum test.
 
-```{r}
+```{r sc-5}
 wilcox.test(IFN_SPAROscore ~ stim, ifnb[[]])
 ```
 
@@ -401,10 +407,10 @@ to quantify that biological phenomenon.
 Because pathway scores are calculated for every individual cell, 
 they can be compared across annotated immune cell populations.
 
-```{r, warning=FALSE}
+```{r sc-6, warning=FALSE}
 VlnPlot(ifnb,
         features = "IFN_SPAROscore", 
-        group.by = "seurat_annotations", 
+        group.by = "cell", 
         pt.size = 0, 
         flip = TRUE )
 
@@ -420,7 +426,7 @@ transcriptional response following interferon stimulation.
 One of the most useful ways to explore pathway activity is to visualise the 
 scores on the UMAP embeddings.
 
-```{r, warning=FALSE, message=FALSE}
+```{r sc-7, warning=FALSE, message=FALSE}
 # get umap embedding from the gene expression data
 
 # normalise the gene expression
@@ -461,7 +467,7 @@ computationally intensive ranking step.
 
 For example, an inflammatory response signature could be scored as follows.
 
-```{r}
+```{r sc-8}
 # load the inflammatory response hallmark genes from msigdb
 inflammation_signature <- msigdbr(species = "Homo sapiens",collection = "H") %>% 
     filter(gs_name == "HALLMARK_INFLAMMATORY_RESPONSE") %>% 
@@ -500,9 +506,9 @@ quantify interferon pathway activity across each cell population.
 
 
 ### Aggregate cells into pseudo-bulk profiles
-```{r}
+```{r pb-1}
 pseudobulk_ifn <- AggregateExpression(ifnb, 
-                                     group.by = c("seurat_annotations", "stim"), 
+                                     group.by = c("cell", "stim"), 
                                      assays = "RNA", 
                                      return.seurat = TRUE,
                                      slot = "counts")
@@ -514,7 +520,7 @@ cell type and treatment (for example, "B_CTRL" or "B_STIM"), while rows
 represent genes.
 
 ### Compute scores at pseudo-bulk level
-```{r}
+```{r pb-2}
 pseudobulk_ifn <- sparoscore(data = pseudobulk_ifn,
                              signatures = ifn_signature,
                              assay = "RNA",
@@ -522,9 +528,9 @@ pseudobulk_ifn <- sparoscore(data = pseudobulk_ifn,
 ```
 ### Visualise pseudo-bulk level scores
 
-```{r}
+```{r pb-3}
 pseudobulk_ifn[[]] %>%
-    ggplot(aes(y = seurat_annotations, x = SPAROscore, fill = stim)) +
+    ggplot(aes(y = cell, x = SPAROscore, fill = stim)) +
     geom_col(position = position_dodge(width = 0.8)) +
     theme_classic() +
     scale_fill_manual(values = c("#2166AC", "#B2182B"))+
@@ -590,7 +596,7 @@ lower in the cortex.
 
 For computational efficiency, we analyse one representative tissue section.
 
-```{r}
+```{r sp-1}
 # load the DLPFC Visium dataset
 dlpfc_spe <- fetch_data(type = "spe")
 
@@ -602,7 +608,7 @@ The object is a SpatialExperiment, containing spot-level gene expression counts,
 spatial coordinates, tissue images, and manually annotated cortical layers.
 
 ## Visualise the tissue morphology
-```{r}
+```{r sp-2}
 # for simplicity of the vignette, work with one sample
 dlpfc_spe <- dlpfc_spe[ , dlpfc_spe$sample_id == "151675"]
 
@@ -617,7 +623,7 @@ vis_clus(spe = dlpfc_spe,
 
 For demonstration purposes, we use a collection of well-established 
 oligodendrocyte marker genes.
-```{r}
+```{r sp-3}
 oligo_signature <- c(
   "ENSG00000167748", "ENSG00000166923", "ENSG00000174607", "ENSG00000135678", 
   "ENSG00000089123", "ENSG00000183018", "ENSG00000129538", "ENSG00000136937", 
@@ -636,7 +642,7 @@ head(oligo_signature %in% rownames(dlpfc_spe))
 Since SpatialExperiment objects are supported directly by SPAROscore, 
 pathway scores can be computed without extracting the expression matrix.
 
-```{r}
+```{r sp-4}
 dlpfc_spe <- sparoscore(data = dlpfc_spe,
                         assay = "counts",
                         signatures = oligo_signature,
@@ -658,7 +664,7 @@ visualise biological processes within their anatomical context.
 Using the spot coordinates stored in the SpatialExperiment object, 
 the SPAROscore can be projected directly onto the tissue section.
 
-```{r}
+```{r sp-5}
 vis_gene(spe = dlpfc_spe,
          geneid = "Oligo_SPAROscore",
          spatial = TRUE,
@@ -679,7 +685,7 @@ of oligodendrocyte gene expression.
 The manual annotations for each cortical layer enables 
 quantitative comparison of oligodendrocyte pathway activity.
 
-```{r}
+```{r sp-6}
 # differentiate white matter from cortex based on annotations
 dlpfc_metadata <- as.data.frame(colData(dlpfc_spe)) %>% 
             filter(layer_guess != "NA") %>% # remove missing annotations
@@ -710,7 +716,7 @@ matter while the cortical grey matter predominantly contains neuronal cells.
 To further illustrate the difference, oligodendrocyte signature scores between 
 cortical spots and white matter can be compared statistically.
 
-```{r}
+```{r sp-7}
 wilcox.test(Oligo_SPAROscore ~ Region, data = dlpfc_metadata)
 ```
 The significant reduction in oligodendrocyte signature scores within grey matter 
@@ -763,6 +769,6 @@ usage vignette can be found here:
 [Advanced options](sparoscore_advanced_options.html)
 
 
-```{r}
+```{r session-info}
 sessionInfo()
 ```

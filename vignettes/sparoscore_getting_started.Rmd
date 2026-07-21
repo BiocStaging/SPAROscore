@@ -10,7 +10,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r global-options, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -61,7 +61,7 @@ reported in the [original study](https://doi.org/10.1371/journal.pone.0099625).
 The expression matrix contains genes in rows and samples in columns. 
 The accompanying metadata indicates whether each sample received dexamethasone 
 treatment (trt) or served as an untreated control (untrt).
-```{r}
+```{r load-dataset}
 # load the airway dataset
 data(airway)
 
@@ -87,7 +87,7 @@ head(signature_genes %in% rownames(counts_data))
 ```
 
 ## Compute signature scores using SPAROscore
-```{r}
+```{r compute-scores}
 scores <- sparoscore(data = counts_data, signatures = signature_genes)
 
 # view the scores
@@ -99,7 +99,7 @@ scores
 Since dexamethasone activates glucocorticoid signalling, treated samples are 
 expected to exhibit higher glucocorticoid response scores than untreated 
 controls.
-```{r}
+```{r visualise-results}
 # add the signature scores to the metadata
 metadata$SPAROscore <- scores[, 1]
 
@@ -159,6 +159,6 @@ For examples of additional options and more advanced usage, see:
 [Advanced options](sparoscore_advanced_options.html)
 
 
-```{r}
+```{r session-info}
 sessionInfo()
 ```

@@ -10,7 +10,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r global-options, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -97,7 +97,7 @@ as well as the hallmark inflammatory response genes taken from the
 Molecular Signatures Database (MSigDB).
 
 ### Load the gene expression dataset
-```{r}
+```{r load-data}
 # load the airway dataset
 data(airway)
 
@@ -109,7 +109,7 @@ metadata <- as.data.frame(colData(airway))
 ```
 
 ### Load the gene signatures
-```{r}
+```{r load-signature}
 # set the glucocorticoid response markers from the original study as a signature 
 response_genes <- c("ENSG00000112936", "ENSG00000170606", "ENSG00000120129", 
                      "ENSG00000152795", "ENSG00000211445", "ENSG00000163884",
@@ -131,7 +131,7 @@ inflammation_genes <- msigdbr(species = "Homo sapiens", collection = "H") %>%
 # Gene expression as matrix-like data structures
 
 ## Dense matrix
-```{r}
+```{r matrix}
 # load gene expression data as dense matrix
 counts_matrix <- as.matrix(counts_data)
 
@@ -147,7 +147,7 @@ Note that one signature gene is absent from the input expression data,
 and SPAROscore reports this as a warning during scoring.
 
 ## SparseMatrix
-```{r}
+```{r smatrix}
 # load gene expression data as sparseMatrix
 counts_sparse <- as(counts_matrix, "sparseMatrix")
 
@@ -164,7 +164,7 @@ them to dense matrices, reducing memory usage and improving computational
 efficiency.
 
 ## DelayedArrays
-```{r}
+```{r dmatrix}
 # load gene expression data as delayedArray
 counts_delayed <- DelayedArray(counts_matrix)
 
@@ -180,7 +180,7 @@ Note that the gene ranking is performed natively on the DelayedArray object,
 enabling improved computational efficiency.
 
 ## Data frame
-```{r}
+```{r dataframe}
 # load gene expression data as delayedArray
 counts_df <- as.data.frame(counts_matrix)
 
@@ -197,7 +197,7 @@ because matrix operations are more efficient for this step.
 
 ### Verify if the output scores are the same with differing input formats
 
-```{r}
+```{r check-results}
 identical(scores_matrix, scores_sparse)
 identical(scores_matrix, scores_delayed)
 identical(scores_matrix, scores_df)
@@ -206,7 +206,7 @@ identical(scores_matrix, scores_df)
 # Gene signature representations
 
 ## Single signature as a character vector
-```{r}
+```{r character}
 # compute scores from a character vector signature
 scores_for_vector <- sparoscore(data = counts_matrix, 
                                  signatures = response_genes)
@@ -217,20 +217,21 @@ scores_for_vector
 
 
 ## Single signature as a GeneSet object
-```{r}
+```{r geneset}
 # get a GeneSet object
 response_geneset <- GeneSet(response_genes)
 
 # compute scores from a GeneSet object
 scores_for_geneset <- sparoscore(data = counts_sparse, 
-                                 signatures = response_geneset, prefix = "hello")
+                                 signatures = response_geneset, 
+                                 prefix = "hello")
 
 # view scores
 scores_for_geneset
 ```
 
 ## Multiple signatures as a named list
-```{r}
+```{r list}
 # create a named list of vectors to score for both signatures simultaneously
 gene_signatures <- list("glucocorticoid_response" = response_genes,
                         "inflammation_response" = inflammation_genes)
@@ -244,7 +245,7 @@ scores_for_list
 ```
 
 ## Multiple signatures as a GeneSetCollection object
-```{r}
+```{r genesetcollection}
 # create a GeneSetCollection object to score for both signatures simultaneously
 gene_set_collection <- GeneSetCollection(
   mapply(function(g, n) GeneSet(unique(g), setName = n), 
@@ -268,7 +269,7 @@ named `ranks`.
 
 In this example, let us work with a SingleCellExperiment object
 
-```{r}
+```{r sce}
 # convert airways to a SingleCellExperiment object
 airway_sce <- as(airway, "SingleCellExperiment")
 
@@ -309,7 +310,7 @@ For Seurat objects, after scoring, SPAROscore returns a Seurat object
 with the scores and the rank caps appended to the metadata. The ranks are stored
 in a layer named `ranks` in the same assay as the counts.
 
-```{r}
+```{r seurat}
 # convert airway to a seurat object 
 airway_seurat <- CreateSeuratObject(
   counts = assay(airway),
@@ -364,6 +365,6 @@ For examples of in-depth transcriptomics analyses using SPAROscore, refer here:
 For examples of additional options and advanced usage, see:
 [Advanced options](sparoscore_advanced_options.html)
 
-```{r}
+```{r session-info}
 sessionInfo()
 ```
