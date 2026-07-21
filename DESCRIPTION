@@ -49,5 +49,6 @@ Suggests:
     tidyr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Remotes: satijalab/seurat-data
 URL: https://github.com/MangiolaLaboratory/SPAROscore
 BugReports: https://github.com/MangiolaLaboratory/SPAROscore/issues
