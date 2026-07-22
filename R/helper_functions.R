@@ -724,7 +724,7 @@ compute_sparoscores <- function(ranks,
 #'  Defaults to NULL.
 #'
 #' When down_signatures is not NULL,
-#' Final Score = Score(signatures) - Score(down_signatures)
+#' Final Score <- Score(signatures) - Score(down_signatures)
 #'
 #'
 #' @param data_has_ranks Logical indicating whether matrix_object contains
@@ -896,7 +896,7 @@ augment_sparoscores_matrix <- function(matrix_object,
 #'  Defaults to NULL.
 #'
 #' When down_signatures is not NULL,
-#' Final Score = Score(signatures) - Score(down_signatures)
+#' Final Score <- Score(signatures) - Score(down_signatures)
 #'
 #'
 #' @param data_has_ranks Logical indicating whether previously
@@ -1144,7 +1144,7 @@ augment_sparoscores_seurat <- function(seurat_object,
 #'  Defaults to NULL.
 #'
 #' When down_signatures is not NULL,
-#' Final Score = Score(signatures) - Score(down_signatures)
+#' Final Score <- Score(signatures) - Score(down_signatures)
 #'
 #'
 #' @param data_has_ranks Logical indicating whether the specified assay already
